@@ -1,35 +1,52 @@
 import React, { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 
-const LandingPage: React.FC = () => {
-  const [gameKey, setGameKey] = useState('');
+function StartingScreen() {
+  const [roomKey, setRoomKey] = useState('');
+  const navigate = Navigate();
+
+  const createRoom = async () => {
+    // Make an API request to the backend to create a new room
+    // On successful response, navigate to the game room
+    try {
+      // Make an API request to the backend to create a new room
+      const response = await fetch('/create-room', { method: 'POST' });
+      const data = await response.json();
+
+      // On successful response, navigate to the game room
+      navigate(`/game/${data.roomId}?key=${data.roomKey}`);
+    } catch (error) {
+      console.error('Error creating room:', error);
+      alert('Failed to create a game room. Please try again.');
+    }
+  };
+
+  const joinRoom = async () => {
+    // Make an API request with the roomKey to join the room
+    // On successful response, navigate to the game room
+    if (roomKey.length !== 4) {
+      alert('Please enter a valid 4-character room key.');
+      return;
+      history.push(`/game/join?key=${roomKey}`);
+    }
+  };
 
   return (
-    <div className='landing'>
-      <h1>Welcome to the Card Game</h1>
-
-      <div>
-        <button onClick={createGame}>Create New Game</button>
-      </div>
+    <div>
+      <button onClick={createRoom}>Create Game</button>
 
       <div>
         <input
           type='text'
-          placeholder='Enter game key'
-          value={gameKey}
-          onChange={(e) => setGameKey(e.target.value)}
+          maxLength={4}
+          value={roomKey}
+          onChange={(e) => setRoomKey(e.target.value.toUpperCase())}
+          placeholder='Enter Room Key'
         />
-        <button onClick={() => joinGame(gameKey)}>Join Game</button>
+        <button onClick={joinRoom}>Join Game</button>
       </div>
     </div>
   );
+}
 
-  function createGame() {
-    // Logic to generate a random 4 character key and create a new game
-  }
-
-  function joinGame(key: string) {
-    // Logic to join an existing game with the provided key
-  }
-};
-
-export default LandingPage;
+export default StartingScreen;
