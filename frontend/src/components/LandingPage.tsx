@@ -27,7 +27,7 @@ function StartingScreen() {
     if (roomKey.length !== 4) {
       alert('Please enter a valid 4-character room key.');
       return;
-      history.push(`/game/join?key=${roomKey}`);
+      navigate(`/game/join?key=${roomKey}`);
     }
   };
 

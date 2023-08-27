@@ -1,7 +1,6 @@
 import config from '@colyseus/tools';
 import { monitor } from '@colyseus/monitor';
 import { playground } from '@colyseus/playground';
-import { generateGameKey } from './rooms/gameKeyGenerator';
 
 /**
  * Import your Room files
@@ -39,18 +38,6 @@ export default config({
      * Read more: https://docs.colyseus.io/tools/monitor/#restrict-access-to-the-panel-using-a-password
      */
     app.use('/colyseus', monitor());
-    app.post('/room', async (req, res) => {
-      try {
-        const room = await gameServer.requestToJoinOrCreate('my_room', {});
-        const roomKey = generateGameKey();
-
-        room.metadata = { roomKey };
-
-        res.json({ roomId: room.roomId, roomKey });
-      } catch (error) {
-        res.status(500).send('Error creating room');
-      }
-    });
   },
 
   beforeListen: () => {
