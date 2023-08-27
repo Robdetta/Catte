@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-function StartingScreen() {
+function LandingPage() {
   const [roomKey, setRoomKey] = useState('');
-  const navigate = Navigate();
+  const navigate = useNavigate();
 
   const createRoom = async () => {
     // Make an API request to the backend to create a new room
@@ -49,4 +49,4 @@ function StartingScreen() {
   );
 }
 
-export default StartingScreen;
+export default LandingPage;
