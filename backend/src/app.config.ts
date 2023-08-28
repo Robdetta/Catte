@@ -35,6 +35,16 @@ export default config({
         res.status(404).json({ error: 'Room not found' });
       }
     });
+    app.get('/game/:gameKey', (req, res) => {
+      const gameKey = req.params.gameKey;
+      const sessionId = req.query.sessionId;
+      const roomId = gameKeyToRoomId[gameKey];
+
+      // Logic to verify the sessionId belongs to this gameKey (room)
+      // Fetch game state or perform other logic...
+
+      res.json({ roomId, gameKey, sessionId });
+    });
 
     /**
      * Use @colyseus/playground

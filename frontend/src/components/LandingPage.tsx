@@ -19,7 +19,7 @@ function LandingPage() {
 
       if (data.gameKey) {
         // Redirect using gameKey
-        navigate(`/game/${data.gameKey}`);
+        navigate(`/game/${data.gameKey}?sessionId=${room.sessionId}`);
       } else {
         console.error('Error fetching gameKey:', data.error);
       }
