@@ -1,23 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Client } from 'colyseus.js';
 
+const client = new Client('ws://localhost:2567');
 function LandingPage() {
   const [roomKey, setRoomKey] = useState('');
   const navigate = useNavigate();
 
   const createRoom = async () => {
-    // Make an API request to the backend to create a new room
-    // On successful response, navigate to the game room
     try {
-      // Make an API request to the backend to create a new room
-      const response = await fetch('/create-room', { method: 'POST' });
-      const data = await response.json();
+      // This will either join an existing room or create a new one if none are available.
+      const room = await client.joinOrCreate('my_room');
 
-      // On successful response, navigate to the game room
-      navigate(`/game/${data.roomId}?key=${data.roomKey}`);
+      // Redirect the user to the game room URL with the room ID.
+      navigate(`/game/${room.id}`);
     } catch (error) {
-      console.error('Error creating room:', error);
-      alert('Failed to create a game room. Please try again.');
+      console.error('Error creating/joining room:', error);
     }
   };
 
