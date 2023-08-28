@@ -1,6 +1,7 @@
 import { Room, Client } from '@colyseus/core';
 import { MyRoomState } from './schema/MyRoomState';
 import { generateGameKey } from './gameKeyGenerator';
+import { gameKeyToRoomId } from './roomData';
 export class CardGameRoom extends Room<MyRoomState> {
   maxClients = 6;
   gameKey: string;
@@ -8,6 +9,7 @@ export class CardGameRoom extends Room<MyRoomState> {
   onCreate(options: any) {
     this.setState(new MyRoomState());
     this.gameKey = generateGameKey();
+    gameKeyToRoomId[this.gameKey] = this.roomId;
     this.onMessage('type', (client, message) => {
       //
       // handle "type" message

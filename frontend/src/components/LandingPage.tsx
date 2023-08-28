@@ -9,11 +9,20 @@ function LandingPage() {
 
   const createRoom = async () => {
     try {
-      // This will either join an existing room or create a new one if none are available.
       const room = await client.joinOrCreate('my_room');
 
-      // Redirect the user to the game room URL with the room ID.
-      navigate(`/game/${room.id}`);
+      // Fetch the gameKey from the server
+      const response = await fetch(
+        `http://localhost:2567/getGameKey?roomId=${room.id}`,
+      );
+      const data = await response.json();
+
+      if (data.gameKey) {
+        // Redirect using gameKey
+        navigate(`/game/${data.gameKey}`);
+      } else {
+        console.error('Error fetching gameKey:', data.error);
+      }
     } catch (error) {
       console.error('Error creating/joining room:', error);
     }

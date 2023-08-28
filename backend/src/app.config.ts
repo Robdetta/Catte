@@ -1,7 +1,7 @@
 import config from '@colyseus/tools';
 import { monitor } from '@colyseus/monitor';
 import { playground } from '@colyseus/playground';
-
+import { gameKeyToRoomId } from './rooms/roomData';
 /**
  * Import your Room files
  */
@@ -20,8 +20,20 @@ export default config({
      * Bind your custom express routes here:
      * Read more: https://expressjs.com/en/starter/basic-routing.html
      */
-    app.get('/hello_world', (req, res) => {
-      res.send("It's time to kick ass and chew bubblegum!");
+    // Assuming you have the following imports:
+    // import express from 'express';
+    // const app = express();
+
+    app.get('/getGameKey', (req, res) => {
+      const roomId = req.query.roomId;
+      const gameKey = Object.keys(gameKeyToRoomId).find(
+        (key) => gameKeyToRoomId[key] === roomId,
+      );
+      if (gameKey) {
+        res.json({ gameKey });
+      } else {
+        res.status(404).json({ error: 'Room not found' });
+      }
     });
 
     /**
