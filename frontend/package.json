@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "colyseus": "^0.15.7",
+    "colyseus.js": "^0.15.13",
     "phaser": "^3.60.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
