@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Client } from 'colyseus.js';
+import './LandingPage.css';
 
 const client = new Client('ws://localhost:2567');
 function LandingPage() {
@@ -39,18 +40,29 @@ function LandingPage() {
   };
 
   return (
-    <div>
-      <button onClick={createRoom}>Create Game</button>
+    <div className='landing-container'>
+      <button
+        className='create-button'
+        onClick={createRoom}
+      >
+        Create Game
+      </button>
 
-      <div>
+      <div className='room-key-container'>
         <input
           type='text'
           maxLength={4}
           value={roomKey}
           onChange={(e) => setRoomKey(e.target.value.toUpperCase())}
           placeholder='Enter Room Key'
+          className='room-key-input'
         />
-        <button onClick={joinRoom}>Join Game</button>
+        <button
+          className='join-button'
+          onClick={joinRoom}
+        >
+          Join Game
+        </button>
       </div>
     </div>
   );
