@@ -11,6 +11,17 @@ export default class Main extends Phaser.Scene {
   }
 
   create() {
+    // Draw a rectangle for visualization
+    this.add
+      .rectangle(
+        0,
+        0,
+        this.cameras.main.width,
+        this.cameras.main.height,
+        0xff0000,
+        0.2,
+      )
+      .setOrigin(0);
     this.add
       .text(
         this.cameras.main.centerX,

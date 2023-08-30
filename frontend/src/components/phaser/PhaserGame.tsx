@@ -8,21 +8,43 @@ const PhaserGame: React.FC = () => {
 
   useEffect(() => {
     let game: Phaser.Game | null = null;
-    console.log('Phaser Initialization started');
+
     if (gameContainerRef.current) {
       phaserConfig.parent = gameContainerRef.current;
       game = new Phaser.Game(phaserConfig);
     }
+    const resizeGame = () => {
+      if (game) {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        game.resize(width, height);
+      }
+    };
+
+    const resize = () => {
+      if (game) {
+        game.scale.resize(window.innerWidth, window.innerHeight);
+      }
+    };
+
+    window.addEventListener('resize', resizeGame);
 
     return () => {
       if (game) game.destroy(true);
+      window.removeEventListener('resize', resize);
     };
   }, []);
 
   return (
     <div
       ref={gameContainerRef}
-      style={{ width: '100vw', height: '100vh' }}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100vh',
+      }}
     />
   );
 };
