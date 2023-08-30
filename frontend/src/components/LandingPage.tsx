@@ -30,12 +30,23 @@ function LandingPage() {
   };
 
   const joinRoom = async () => {
-    // Make an API request with the roomKey to join the room
-    // On successful response, navigate to the game room
     if (roomKey.length !== 4) {
       alert('Please enter a valid 4-character room key.');
       return;
-      navigate(`/game/join?key=${roomKey}`);
+    }
+    try {
+      const room = await client.join('my_room', { gameKey: roomKey });
+
+      // Check if you successfully joined the room
+      if (room) {
+        navigate(`/game/${roomKey}?sessionId=${room.sessionId}`);
+      } else {
+        console.error(
+          'Error joining room: Could not join the room with the given gameKey.',
+        );
+      }
+    } catch (error) {
+      console.error('Error joining room:', error);
     }
   };
 

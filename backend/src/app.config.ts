@@ -46,6 +46,25 @@ export default config({
       res.json({ roomId, gameKey, sessionId });
     });
 
+    app.get('/joinRoom', (req, res) => {
+      const gameKey = req.query.gameKey;
+
+      if (typeof gameKey !== 'string') {
+        return res.status(400).json({ error: 'Invalid gameKey' });
+      }
+
+      const roomId = gameKeyToRoomId[gameKey];
+
+      if (!roomId) {
+        return res
+          .status(404)
+          .json({ error: 'No room found with the given gameKey' });
+      }
+
+      // If we get here, it means the gameKey is valid and associated with a room.
+      return res.json({ roomId });
+    });
+
     /**
      * Use @colyseus/playground
      * (It is not recommended to expose this route in a production environment)
