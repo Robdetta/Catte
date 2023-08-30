@@ -17,6 +17,12 @@ export default class Main extends Phaser.Scene {
     // Generate a deck of cards from the atlas
     const frames = this.textures.get('cards').getFrameNames();
 
+    let x = 500;
+    let y = 500;
+    this.add
+      .image(x, y, 'cards', Phaser.Math.RND.pick(frames))
+      .setInteractive();
+
     // Adjust properties if needed, such as setting scale or interactive properties.
     this.welcomeText = this.add
       .text(
