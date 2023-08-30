@@ -17,21 +17,28 @@ const PhaserGame: React.FC = () => {
       if (game) {
         const width = window.innerWidth;
         const height = window.innerHeight;
-        game.resize(width, height);
-      }
-    };
 
-    const resize = () => {
-      if (game) {
-        game.scale.resize(window.innerWidth, window.innerHeight);
+        if (game.canvas) {
+          game.canvas.width = width;
+          game.canvas.height = height;
+        }
+
+        if (game.scene.scenes.length > 0) {
+          const mainScene = game.scene.scenes[0];
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+
+          mainScene.cameras.main.setSize(width, height);
+          mainScene.cameras.main.centerOn(width / 2, height / 2);
+        }
       }
     };
 
     window.addEventListener('resize', resizeGame);
 
     return () => {
+      window.removeEventListener('resize', resizeGame);
       if (game) game.destroy(true);
-      window.removeEventListener('resize', resize);
     };
   }, []);
 

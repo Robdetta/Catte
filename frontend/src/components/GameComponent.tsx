@@ -10,8 +10,8 @@ function GameComponent() {
   // Rest of your component logic...
   return (
     <div>
-      <p>Game Key: {gameKey}</p>
-      <p>Session ID: {sessionId}</p>
+      {/* <p>Game Key: {gameKey}</p>
+      <p>Session ID: {sessionId}</p> */}
       {/* Your Phaser or other game logic/rendering can go here */}
       <PhaserGame />
     </div>
