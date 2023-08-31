@@ -23,11 +23,6 @@ export default class Main extends Phaser.Scene {
 
     getDeck()
       .then((deck) => {
-        // Now, try to manually parse it
-        console.log(deck);
-        return deck;
-      })
-      .then((deck) => {
         console.log(deck); // <--- Add this
         //Convert backend card naming to atlas frame naming
 
