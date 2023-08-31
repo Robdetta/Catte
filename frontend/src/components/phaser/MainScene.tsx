@@ -1,5 +1,6 @@
 // MainScene.ts
 import Phaser from 'phaser';
+import { getDeck } from '../../services/deckService';
 
 export default class Main extends Phaser.Scene {
   welcomeText: Phaser.GameObjects.Text | null = null;
@@ -14,15 +15,40 @@ export default class Main extends Phaser.Scene {
   }
 
   create() {
-    // Generate a deck of cards from the atlas
-    const frames = this.textures.get('cards').getFrameNames();
+    function isStringArray(array: any): array is string[] {
+      return (
+        Array.isArray(array) && array.every((item) => typeof item === 'string')
+      );
+    }
 
-    let x = 500;
-    let y = 500;
-    this.add
-      .image(x, y, 'cards', Phaser.Math.RND.pick(frames))
-      .setInteractive();
+    getDeck()
+      .then((deck) => {
+        // Now, try to manually parse it
+        console.log(deck);
+        return deck;
+      })
+      .then((deck) => {
+        console.log(deck); // <--- Add this
+        //Convert backend card naming to atlas frame naming
 
+        const atlasFrames = deck; // <--- Add this
+        //const frames = this.textures.get('cards').getFrameNames();
+
+        let x = 500;
+        let y = 500;
+        const gap = 30;
+
+        atlasFrames.forEach((frame, index) => {
+          if (!this.textures.get('cards').has(frame)) {
+            console.warn(`Frame not found: ${frame}`);
+            return;
+          }
+          this.add.image(x + index * gap, y, 'cards', frame);
+        });
+      })
+      .catch((error) => {
+        console.error('Fetch error: ' + error.message);
+      });
     // Adjust properties if needed, such as setting scale or interactive properties.
     this.welcomeText = this.add
       .text(

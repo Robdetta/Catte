@@ -65,6 +65,36 @@ export default config({
       return res.json({ roomId });
     });
 
+    // Generate and return a shuffled deck
+    app.get('/deck', (req, res) => {
+      const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+      const values = [
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+        '8',
+        '9',
+        '10',
+        'Jack',
+        'Queen',
+        'King',
+        'Ace',
+      ];
+      let deck = [];
+
+      for (let suit of suits) {
+        for (let value of values) {
+          deck.push(`${suit}${value}`);
+        }
+      }
+
+      deck = deck.sort(() => Math.random() - 0.5);
+      res.json(deck);
+    });
+
     /**
      * Use @colyseus/playground
      * (It is not recommended to expose this route in a production environment)
