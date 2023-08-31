@@ -1,3 +1,5 @@
+// player.ts
+
 class Player {
   id: number;
   name: string;
@@ -20,7 +22,7 @@ class Player {
   }
 }
 
-let players: Player[] = [new Player(1, 'Alice'), new Player(2, 'Bob')];
+let players: Player[] = [];
 let currentPlayerIndex: number = 0;
 
 function nextTurn(): void {
@@ -29,4 +31,4 @@ function nextTurn(): void {
   players[currentPlayerIndex].isTurn = true;
 }
 
-export { Player };
+export { Player, players, nextTurn };
