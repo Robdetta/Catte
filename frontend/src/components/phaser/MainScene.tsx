@@ -12,6 +12,9 @@ export default class Main extends Phaser.Scene {
     // Load any assets here
     // Assuming card.json references images like "card_1.png", "card_2.png", etc.
     this.load.atlas('cards', '/src/assets/cards.png', '/src/assets/cards.json');
+
+    // place to load player avatar assets
+    //this.load.image('playerAvatar', 'path_to_player_avatar_image.png');
   }
 
   create() {
@@ -21,24 +24,47 @@ export default class Main extends Phaser.Scene {
       );
     }
 
+    class Player {
+      public avatar: Phaser.GameObjects.Image;
+      public hand: Phaser.GameObjects.Image[] = [];
+
+      constructor(scene: Phaser.Scene, x: number, y: number) {
+        this.avatar = scene.add.image(x, y, 'playerAvatar');
+      }
+    }
+
+    let players: Player[] = [];
+    const numPlayers = 4; // Example number of players, can be set dynamically.
+    const centerX = this.cameras.main.centerX;
+    const centerY = this.cameras.main.centerY;
+    const radius = 300; // Defines the circle's size.
+
+    for (let i = 0; i < numPlayers; i++) {
+      const angle = (i / numPlayers) * 2 * Math.PI;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+
+      players.push(new Player(this, x, y));
+    }
+
     getDeck()
       .then((deck) => {
-        console.log(deck); // <--- Add this
-        //Convert backend card naming to atlas frame naming
-
-        const atlasFrames = deck; // <--- Add this
-        //const frames = this.textures.get('cards').getFrameNames();
-
-        let x = 500;
-        let y = 500;
-        const gap = 30;
-
-        atlasFrames.forEach((frame, index) => {
-          if (!this.textures.get('cards').has(frame)) {
-            console.warn(`Frame not found: ${frame}`);
-            return;
-          }
-          this.add.image(x + index * gap, y, 'cards', frame);
+        // Shuffle and deal the deck
+        const shuffledDeck = this.shuffleDeck(deck);
+        const hands = this.dealCards(shuffledDeck, numPlayers, 5); // Assuming 5 cards each for now.
+        // Display the cards for each player
+        hands.forEach((hand, playerIndex) => {
+          const player = players[playerIndex];
+          hand.forEach((card, cardIndex) => {
+            const xOffset = 30; // Horizontal gap between cards.
+            const cardImage = this.add.image(
+              player.avatar.x + cardIndex * xOffset,
+              player.avatar.y + 100,
+              'cards',
+              card,
+            );
+            player.hand.push(cardImage);
+          });
         });
       })
       .catch((error) => {
