@@ -18,12 +18,6 @@ export default class Main extends Phaser.Scene {
   }
 
   create() {
-    function isStringArray(array: any): array is string[] {
-      return (
-        Array.isArray(array) && array.every((item) => typeof item === 'string')
-      );
-    }
-
     class Player {
       public avatar: Phaser.GameObjects.Image;
       public hand: Phaser.GameObjects.Image[] = [];

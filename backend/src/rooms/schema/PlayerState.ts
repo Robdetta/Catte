@@ -1,4 +1,4 @@
-import { Schema, Context, type } from '@colyseus/schema';
+import { Schema, type } from '@colyseus/schema';
 
 class Player extends Schema {
   @type('string') sessionId: string;

@@ -1,5 +1,3 @@
-// player.ts
-
 class Player {
   id: string;
   name: string;

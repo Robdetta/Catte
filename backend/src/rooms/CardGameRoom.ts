@@ -36,6 +36,7 @@ export class CardGameRoom extends Room<MyRoomState> {
     const newPlayer = new Player(client.sessionId, 'SomeName'); // Name can come from options or another mechanism
     players.push(newPlayer);
     // Deal initial cards to the new player if needed
+    this.state.playerCount++;
   }
 
   onLeave(client: Client, consented: boolean) {
@@ -45,6 +46,7 @@ export class CardGameRoom extends Room<MyRoomState> {
       players.splice(playerIndex, 1);
       nextTurn();
     }
+    this.state.playerCount--;
   }
 
   onDispose() {
