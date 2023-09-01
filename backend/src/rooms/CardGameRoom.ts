@@ -9,6 +9,10 @@ export class CardGameRoom extends Room<MyRoomState> {
   maxClients = 6;
   gameKey: string;
 
+  sendNotification(text: string) {
+    this.broadcast('notification', { text: text });
+  }
+
   onCreate(options: any) {
     // If only 1 human player is selected and no bots, adjust numBots to 1
     if (options.numPlayers === 1 && options.numBots === 0) {
@@ -25,6 +29,9 @@ export class CardGameRoom extends Room<MyRoomState> {
     this.setState(new MyRoomState());
     this.gameKey = generateGameKey();
     gameKeyToRoomId[this.gameKey] = this.roomId;
+    this.broadcast('notification', { text: 'Starting game with bot!' });
+    //notification
+    this.sendNotification('Game created. Waiting for players to join...');
 
     const totalPlayers = options.numPlayers + options.numBots;
 
@@ -46,6 +53,7 @@ export class CardGameRoom extends Room<MyRoomState> {
         if (player) {
           player.drawCard(drawCardFromPile());
           // Then, broadcast the updated state to all clients
+          this.sendNotification(`Player ${client.sessionId} drew a card.`);
         }
       }
       // Handle other game actions similarly
@@ -56,6 +64,7 @@ export class CardGameRoom extends Room<MyRoomState> {
     console.log(client.sessionId, 'joined!');
     const newPlayer = new Player(client.sessionId, 'PlayerName'); // Name can come from options or another mechanism
     players.push(newPlayer);
+    this.sendNotification(`Player ${client.sessionId} joined the game.`);
     // Deal initial cards to the new player if needed
     this.state.playerCount++;
   }
@@ -66,6 +75,7 @@ export class CardGameRoom extends Room<MyRoomState> {
     if (playerIndex !== -1) {
       players.splice(playerIndex, 1);
       nextTurn();
+      this.sendNotification(`Player ${client.sessionId} left the game.`);
     }
     this.state.playerCount--;
   }
