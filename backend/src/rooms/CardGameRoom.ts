@@ -14,6 +14,19 @@ export class CardGameRoom extends Room<MyRoomState> {
     this.gameKey = generateGameKey();
     gameKeyToRoomId[this.gameKey] = this.roomId;
 
+    const totalPlayers = options.numPlayers + options.numBots;
+    
+        // Create human players
+        for(let i = 0; i < options.numPlayers; i++) {
+          players.push(new Player(/*uniqueID*/, 'PlayerName'));
+      }
+  
+      // Create bot players
+      for(let i = 0; i < options.numBots; i++) {
+          players.push(new Player(/*uniqueBotID*/, 'BotName', true));
+      }
+  
+
     // For demonstration purposes, let's deal 5 cards to each player upon room creation
     dealCards(players, 5);
 

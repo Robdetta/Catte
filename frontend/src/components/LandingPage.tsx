@@ -8,9 +8,15 @@ function LandingPage() {
   const [roomKey, setRoomKey] = useState('');
   const navigate = useNavigate();
 
+  const [numPlayers, setNumPlayers] = useState(2);
+  const [numBots, setNumBots] = useState(0);
+
   const createRoom = async () => {
     try {
-      const room = await client.joinOrCreate('my_room');
+      const room = await client.joinOrCreate('my_room', {
+        numPlayers,
+        numBots,
+      });
 
       // Fetch the gameKey from the server
       const response = await fetch(
@@ -52,6 +58,41 @@ function LandingPage() {
 
   return (
     <div className='landing-container'>
+      <label>
+        Number of Players:
+        <select
+          value={numPlayers}
+          onChange={(e) => setNumPlayers(parseInt(e.target.value))}
+        >
+          {[0, 1, 2, 3, 4, 5, 6].map((num) => (
+            <option
+              key={num}
+              value={num}
+            >
+              {num}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Number of Bots:
+        <select
+          value={numBots}
+          onChange={(e) => setNumBots(parseInt(e.target.value))}
+        >
+          {Array(6 - numPlayers + 1)
+            .fill(0)
+            .map((_, index) => (
+              <option
+                key={index}
+                value={index}
+              >
+                {index}
+              </option>
+            ))}
+        </select>
+      </label>
+
       <button
         className='create-button'
         onClick={createRoom}
