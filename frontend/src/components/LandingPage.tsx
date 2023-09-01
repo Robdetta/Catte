@@ -8,7 +8,7 @@ function LandingPage() {
   const [roomKey, setRoomKey] = useState('');
   const navigate = useNavigate();
 
-  const [numPlayers, setNumPlayers] = useState(2);
+  const [numPlayers, setNumPlayers] = useState(1);
   const [numBots, setNumBots] = useState(0);
 
   const createRoom = async () => {
@@ -62,9 +62,16 @@ function LandingPage() {
         Number of Players:
         <select
           value={numPlayers}
-          onChange={(e) => setNumPlayers(parseInt(e.target.value))}
+          onChange={(e) => {
+            let selectedValue = parseInt(e.target.value);
+            if (selectedValue + numBots < 2) {
+              // enforce at least 1 bot if only 1 human
+              setNumBots(1);
+            }
+            setNumPlayers(selectedValue);
+          }}
         >
-          {[0, 1, 2, 3, 4, 5, 6].map((num) => (
+          {[1, 2, 3, 4, 5, 6].map((num) => (
             <option
               key={num}
               value={num}
@@ -78,9 +85,16 @@ function LandingPage() {
         Number of Bots:
         <select
           value={numBots}
-          onChange={(e) => setNumBots(parseInt(e.target.value))}
+          onChange={(e) => {
+            let selectedValue = parseInt(e.target.value);
+            if (selectedValue + numPlayers > 6) {
+              // enforce maximum of 6 players
+              selectedValue = 6 - numPlayers;
+            }
+            setNumBots(selectedValue);
+          }}
         >
-          {Array(6 - numPlayers + 1)
+          {Array(7 - numPlayers)
             .fill(0)
             .map((_, index) => (
               <option

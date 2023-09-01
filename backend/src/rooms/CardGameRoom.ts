@@ -10,22 +10,30 @@ export class CardGameRoom extends Room<MyRoomState> {
   gameKey: string;
 
   onCreate(options: any) {
+    // If only 1 human player is selected and no bots, adjust numBots to 1
+    if (options.numPlayers === 1 && options.numBots === 0) {
+      options.numBots = 1;
+    }
+
+    if (
+      options.numPlayers < 1 ||
+      options.numBots < 1 ||
+      options.numPlayers + options.numBots > 6
+    ) {
+      throw new Error('Invalid number of players or bots.');
+    }
     this.setState(new MyRoomState());
     this.gameKey = generateGameKey();
     gameKeyToRoomId[this.gameKey] = this.roomId;
 
     const totalPlayers = options.numPlayers + options.numBots;
-    
-        // Create human players
-        for(let i = 0; i < options.numPlayers; i++) {
-          players.push(new Player(/*uniqueID*/, 'PlayerName'));
-      }
-  
-      // Create bot players
-      for(let i = 0; i < options.numBots; i++) {
-          players.push(new Player(/*uniqueBotID*/, 'BotName', true));
-      }
-  
+
+    // Create bot players
+    for (let i = 0; i < options.numBots; i++) {
+      // For bots, you can generate a unique ID using a combination of the current time, iteration, and a bot prefix
+      const uniqueBotID = `BOT_${Date.now()}_${i}`;
+      players.push(new Player(uniqueBotID, 'BotName', true));
+    }
 
     // For demonstration purposes, let's deal 5 cards to each player upon room creation
     dealCards(players, 5);
@@ -46,7 +54,7 @@ export class CardGameRoom extends Room<MyRoomState> {
 
   onJoin(client: Client, options: any) {
     console.log(client.sessionId, 'joined!');
-    const newPlayer = new Player(client.sessionId, 'SomeName'); // Name can come from options or another mechanism
+    const newPlayer = new Player(client.sessionId, 'PlayerName'); // Name can come from options or another mechanism
     players.push(newPlayer);
     // Deal initial cards to the new player if needed
     this.state.playerCount++;
