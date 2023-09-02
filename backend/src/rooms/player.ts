@@ -3,12 +3,14 @@ class Player {
   name: string;
   hand: string[];
   isTurn: boolean;
+  isBot: boolean; // Add this line
 
-  constructor(id: string, name: string) {
+  constructor(id: string, name: string, isBot: boolean = false) {
     this.id = id;
     this.name = name;
     this.hand = [];
     this.isTurn = false;
+    this.isBot = isBot; // And this line
   }
 
   drawCard(card: string): void {

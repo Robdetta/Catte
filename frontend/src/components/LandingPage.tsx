@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Client } from 'colyseus.js';
 import './LandingPage.css';
+import { setRoom } from './phaser/helpers/roomStore';
 
 const client = new Client('ws://localhost:2567');
 function LandingPage() {
-  const [roomKey, setRoomKey] = useState('');
+  const [roomKey, setRoomKey] = useState<string>('');
   const navigate = useNavigate();
 
   const [numPlayers, setNumPlayers] = useState(1);
@@ -17,6 +18,9 @@ function LandingPage() {
         numPlayers,
         numBots,
       });
+
+      // Store the room instance
+      setRoom(room);
 
       // Fetch the gameKey from the server
       const response = await fetch(
@@ -42,6 +46,9 @@ function LandingPage() {
     }
     try {
       const room = await client.join('my_room', { gameKey: roomKey });
+
+      // Store the room instance
+      setRoom(room);
 
       // Check if you successfully joined the room
       if (room) {

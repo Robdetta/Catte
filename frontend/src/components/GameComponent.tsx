@@ -1,6 +1,8 @@
 import { useParams, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import PhaserGame from './phaser/PhaserGame';
+import { getRoom } from './phaser/helpers/roomStore';
+import Notification from './notification/notification';
 
 function GameComponent() {
   let { gameKey } = useParams();
@@ -9,10 +11,15 @@ function GameComponent() {
   let sessionId = params.get('sessionId');
   console.log('ParentComponent rendered');
 
-  const [notification, setNotification] = useState(null);
+  const [notification, setNotification] = useState<string | null>(null);
+
+  const room = getRoom();
+  console.log(room);
 
   useEffect(() => {
-    const handleNotification = (message) => {
+    if (!room) return;
+
+    const handleNotification = (message: { text: string }) => {
       setNotification(message.text);
       setTimeout(() => setNotification(null), 5000);
     };
@@ -21,7 +28,7 @@ function GameComponent() {
 
     // Cleanup listeners on component unmount
     return () => {
-      room.offMessage('notification', handleNotification);
+      room.onMessage('notification', handleNotification);
     };
   }, [room]);
 
@@ -30,11 +37,23 @@ function GameComponent() {
     <div>
       {/* <p>Game Key: {gameKey}</p>
       <p>Session ID: {sessionId}</p> */}
+      <Notification room={room} />
       {/* Your Phaser or other game logic/rendering can go here */}
       <PhaserGame />
-      {notification && (
-        <div className='notification-overlay'>{notification}</div>
-      )}
+      <button
+        onClick={() => {
+          console.log('Button clicked');
+          room.send('type', { type: 'drawCard' });
+        }}
+        style={{
+          position: 'absolute',
+          top: '10px', // Adjust as needed
+          left: '10px', // Adjust as needed
+          zIndex: 1000, // Ensure it's above the Phaser game
+        }}
+      >
+        Draw Card
+      </button>
     </div>
   );
 }
