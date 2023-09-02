@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Room } from 'colyseus.js';
 
 type NotificationProps = {
-  room: Room; // Assuming the room is of type Room from Colyseus
+  room: Room | null; // Assuming the room is of type Room from Colyseus
 };
 
 function Notification({ room }: NotificationProps) {

@@ -43,7 +43,12 @@ function GameComponent() {
       <button
         onClick={() => {
           console.log('Button clicked');
-          room.send('type', { type: 'drawCard' });
+          if (room) {
+            // Check if room is not null before sending message
+            room.send('type', { type: 'drawCard' });
+          } else {
+            console.error('Room is not defined!');
+          }
         }}
         style={{
           position: 'absolute',
