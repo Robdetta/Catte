@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Client } from 'colyseus.js';
+//import { Client } from 'colyseus.js';
 import './LandingPage.css';
 import * as roomService from '../services/roomService';
 
-const client = new Client('ws://localhost:2567');
+//const client = new Client('ws://localhost:2567');
 function LandingPage() {
   const [roomKey, setRoomKey] = useState<string>('');
   const navigate = useNavigate();

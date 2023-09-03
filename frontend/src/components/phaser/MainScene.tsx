@@ -2,6 +2,7 @@
 import Phaser from 'phaser';
 import { getDeck } from '../../services/deckService';
 import PlayerManager from './helpers/PlayerManager';
+import { getRoom } from './helpers/roomStore';
 
 export default class Main extends Phaser.Scene {
   playerManager: PlayerManager;
@@ -11,11 +12,9 @@ export default class Main extends Phaser.Scene {
     this.playerManager = new PlayerManager(this);
   }
 
-  init() {
-    // Set default data values here
-    this.data.set('numPlayers', 6);
-    this.data.set('numBots', 0);
-    this.data.set('room', null);
+  init(data: { numPlayers: number; numBots: number }) {
+    this.data.set('numPlayers', data.numPlayers);
+    this.data.set('numBots', data.numBots);
   }
 
   preload() {
@@ -32,27 +31,24 @@ export default class Main extends Phaser.Scene {
     // Access the data
     // Retrieve the data from the game's registry
     // const numPlayers = 6; // We'll hardcode this for now
+    const room = getRoom();
 
-    const room = this.registry.get('room');
-    this.registry.set('room', room);
-    console.log(room);
+    if (!room) {
+      console.error('No room data available');
+      return; // or handle this situation as you see fit.
+    }
+
     const numPlayers = room.state.numPlayers;
     const numBots = room.state.numBots;
 
-    // Pass these to the game scene, e.g., using the Phaser registry:
-    this.registry.set('numPlayers', numPlayers);
-    this.registry.set('numBots', numBots);
-    this.scene.start('MainScene');
-
-    const totalPlayers = numPlayers + numBots;
-
+    const totalPlayers = numBots + numPlayers;
     console.log('Number of human players:', numPlayers);
     console.log('Number of bots:', numBots);
 
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
     const radius = 300; // Defines the circle's size.
-
+    //this.scene.start('MainScene');
     for (let i = 0; i < totalPlayers; i++) {
       const angle = ((i + 1) / (totalPlayers + 1)) * 2 * Math.PI;
       const x = centerX + radius * Math.cos(angle);
