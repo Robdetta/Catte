@@ -11,6 +11,13 @@ export default class Main extends Phaser.Scene {
     this.playerManager = new PlayerManager(this);
   }
 
+  init() {
+    // Set default data values here
+    this.data.set('numPlayers', 6);
+    this.data.set('numBots', 0);
+    this.data.set('room', null);
+  }
+
   preload() {
     // Load any assets here
     // Assuming card.json references images like "card_1.png", "card_2.png", etc.
@@ -24,8 +31,8 @@ export default class Main extends Phaser.Scene {
     // Use the manager to create players
     // Access the data
     // Retrieve the data from the game's registry
-    //const numPlayers = this.registry.get('numPlayers');
-    const numPlayers = 6; // We'll hardcode this for now
+    const numPlayers = this.registry.get('numPlayers'); // Retrieve from this.data
+    //const numPlayers = 6; // We'll hardcode this for now
 
     const numBots = this.registry.get('numBots');
     const room = this.registry.get('room');
@@ -39,7 +46,6 @@ export default class Main extends Phaser.Scene {
       const x = centerX + radius * Math.cos(angle);
       const y = centerY + radius * Math.sin(angle);
       const playerAvatar = this.playerManager.createPlayer(x, y);
-      const debugCircle = this.scene.add.circle(x, y, 5, 0xff0000); // Small red circle
 
       playerAvatar.setScale(0.5); // scale it to 50% of its size
       playerAvatar.setInteractive();

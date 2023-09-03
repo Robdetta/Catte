@@ -12,11 +12,14 @@ function LandingPage() {
   const [numPlayers, setNumPlayers] = useState(1);
   const [numBots, setNumBots] = useState(0);
 
+  const [playerName, setPlayerName] = useState('');
+
   const createRoom = async () => {
     try {
       const room = await client.joinOrCreate('my_room', {
         numPlayers,
         numBots,
+        playerName,
       });
 
       // Store the room instance
@@ -113,7 +116,15 @@ function LandingPage() {
             ))}
         </select>
       </label>
-
+      <label>
+        Player Name:
+        <input
+          type='text'
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
+          placeholder='Enter your name'
+        />
+      </label>
       <button
         className='create-button'
         onClick={createRoom}
