@@ -1,11 +1,14 @@
 // MainScene.ts
 import Phaser from 'phaser';
 import { getDeck } from '../../services/deckService';
+import PlayerManager from './helpers/PlayerManager';
 
 export default class Main extends Phaser.Scene {
+  playerManager: PlayerManager;
   welcomeText: Phaser.GameObjects.Text | null = null;
   constructor() {
     super({ key: 'MainScene' });
+    this.playerManager = new PlayerManager(this);
   }
 
   preload() {
@@ -14,21 +17,19 @@ export default class Main extends Phaser.Scene {
     this.load.atlas('cards', '/src/assets/cards.png', '/src/assets/cards.json');
 
     // place to load player avatar assets
-    //this.load.image('playerAvatar', 'path_to_player_avatar_image.png');
+    this.load.image('playerAvatar', 'path_to_player_avatar_image.png');
   }
 
   create() {
-    class Player {
-      public avatar: Phaser.GameObjects.Image;
-      public hand: Phaser.GameObjects.Image[] = [];
+    // Use the manager to create players
+    // Access the data
+    // Retrieve the data from the game's registry
+    //const numPlayers = this.registry.get('numPlayers');
+    const numPlayers = 6; // We'll hardcode this for now
 
-      constructor(scene: Phaser.Scene, x: number, y: number) {
-        this.avatar = scene.add.image(x, y, 'playerAvatar');
-      }
-    }
+    const numBots = this.registry.get('numBots');
+    const room = this.registry.get('room');
 
-    let players: Player[] = [];
-    const numPlayers = 4; // Example number of players, can be set dynamically.
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
     const radius = 300; // Defines the circle's size.
@@ -37,8 +38,19 @@ export default class Main extends Phaser.Scene {
       const angle = (i / numPlayers) * 2 * Math.PI;
       const x = centerX + radius * Math.cos(angle);
       const y = centerY + radius * Math.sin(angle);
+      const playerAvatar = this.playerManager.createPlayer(x, y);
+      const debugCircle = this.scene.add.circle(x, y, 5, 0xff0000); // Small red circle
 
-      players.push(new Player(this, x, y));
+      playerAvatar.setScale(0.5); // scale it to 50% of its size
+      playerAvatar.setInteractive();
+
+      console.log(`Player ${i + 1} position: x=${x}, y=${y}`);
+
+      this.input.on('gameobjectup', (pointer, gameObject) => {
+        if (gameObject === playerAvatar) {
+          // Player avatar was clicked, do something!
+        }
+      });
     }
 
     getDeck()

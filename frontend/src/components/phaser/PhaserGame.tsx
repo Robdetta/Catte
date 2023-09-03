@@ -3,7 +3,17 @@ import React, { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import phaserConfig from './phaserConfig';
 
-const PhaserGame: React.FC = () => {
+interface PhaserGameProps {
+  numPlayers: number;
+  numBots: number;
+  room: any; // Update the type of room if you have a specific type for it
+}
+
+const PhaserGame: React.FC<PhaserGameProps> = ({
+  numPlayers,
+  numBots,
+  room,
+}) => {
   const gameContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -12,6 +22,12 @@ const PhaserGame: React.FC = () => {
     if (gameContainerRef.current) {
       phaserConfig.parent = gameContainerRef.current;
       game = new Phaser.Game(phaserConfig);
+
+      //const mainScene = game.scene.getScene('MainScene');
+      // Store the data in the game instance
+      game.registry.set('numPlayers', numPlayers);
+      game.registry.set('numBots', numBots);
+      game.registry.set('room', room);
     }
     const resizeGame = () => {
       if (game) {
@@ -40,7 +56,7 @@ const PhaserGame: React.FC = () => {
       window.removeEventListener('resize', resizeGame);
       if (game) game.destroy(true);
     };
-  }, []);
+  }, [numPlayers, numBots, room]);
 
   return (
     <div
