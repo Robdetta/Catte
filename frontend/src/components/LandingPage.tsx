@@ -2,43 +2,26 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Client } from 'colyseus.js';
 import './LandingPage.css';
-import { setRoom } from './phaser/helpers/roomStore';
+import * as roomService from '../services/roomService';
 
 const client = new Client('ws://localhost:2567');
 function LandingPage() {
   const [roomKey, setRoomKey] = useState<string>('');
   const navigate = useNavigate();
-
   const [numPlayers, setNumPlayers] = useState(1);
   const [numBots, setNumBots] = useState(0);
-
   const [playerName, setPlayerName] = useState('');
 
   const createRoom = async () => {
     try {
-      const room = await client.joinOrCreate('my_room', {
+      const { gameKey, sessionId } = (await roomService.createRoom(
         numPlayers,
         numBots,
         playerName,
-      });
-
-      // Store the room instance
-      setRoom(room);
-
-      // Fetch the gameKey from the server
-      const response = await fetch(
-        `http://localhost:2567/getGameKey?roomId=${room.id}`,
-      );
-      const data = await response.json();
-
-      if (data.gameKey) {
-        // Redirect using gameKey
-        navigate(`/game/${data.gameKey}?sessionId=${room.sessionId}`);
-      } else {
-        console.error('Error fetching gameKey:', data.error);
-      }
+      )) as { gameKey: string; sessionId: string };
+      navigate(`/game/${gameKey}?sessionId=${sessionId}`);
     } catch (error) {
-      console.error('Error creating/joining room:', error);
+      console.error('Error creating room:', error);
     }
   };
 
@@ -48,19 +31,13 @@ function LandingPage() {
       return;
     }
     try {
-      const room = await client.join('my_room', { gameKey: roomKey });
-
-      // Store the room instance
-      setRoom(room);
-
-      // Check if you successfully joined the room
-      if (room) {
-        navigate(`/game/${roomKey}?sessionId=${room.sessionId}`);
-      } else {
-        console.error(
-          'Error joining room: Could not join the room with the given gameKey.',
-        );
+      const result = await roomService.joinRoom(roomKey);
+      if (!result) {
+        throw new Error('Failed to join room.');
       }
+
+      const { gameKey, sessionId } = result;
+      navigate(`/game/${gameKey}?sessionId=${sessionId}`);
     } catch (error) {
       console.error('Error joining room:', error);
     }
