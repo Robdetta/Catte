@@ -31,18 +31,30 @@ export default class Main extends Phaser.Scene {
     // Use the manager to create players
     // Access the data
     // Retrieve the data from the game's registry
-    const numPlayers = this.registry.get('numPlayers'); // Retrieve from this.data
-    //const numPlayers = 6; // We'll hardcode this for now
+    // const numPlayers = 6; // We'll hardcode this for now
 
-    const numBots = this.registry.get('numBots');
     const room = this.registry.get('room');
+    this.registry.set('room', room);
+    console.log(room);
+    const numPlayers = room.state.numPlayers;
+    const numBots = room.state.numBots;
+
+    // Pass these to the game scene, e.g., using the Phaser registry:
+    this.registry.set('numPlayers', numPlayers);
+    this.registry.set('numBots', numBots);
+    this.scene.start('MainScene');
+
+    const totalPlayers = numPlayers + numBots;
+
+    console.log('Number of human players:', numPlayers);
+    console.log('Number of bots:', numBots);
 
     const centerX = this.cameras.main.centerX;
     const centerY = this.cameras.main.centerY;
     const radius = 300; // Defines the circle's size.
 
-    for (let i = 0; i < numPlayers; i++) {
-      const angle = (i / numPlayers) * 2 * Math.PI;
+    for (let i = 0; i < totalPlayers; i++) {
+      const angle = ((i + 1) / (totalPlayers + 1)) * 2 * Math.PI;
       const x = centerX + radius * Math.cos(angle);
       const y = centerY + radius * Math.sin(angle);
       const playerAvatar = this.playerManager.createPlayer(x, y);

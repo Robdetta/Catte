@@ -1,5 +1,3 @@
-import { Schema, type, ArraySchema } from '@colyseus/schema';
-
 class Player {
   id: string;
   name: string;

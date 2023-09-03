@@ -15,20 +15,35 @@ export class CardGameRoom extends Room<MyRoomState> {
 
   onCreate(options: any) {
     // If only 1 human player is selected and no bots, adjust numBots to 1
-    if (options.numPlayers === 1 && options.numBots === 0) {
-      options.numBots = 1;
+    // if (options.numPlayers === 1 && options.numBots === 0) {
+    //   options.numBots = 1;
+    // }
+
+    // if (
+    //   options.numPlayers < 1 ||
+    //   options.numBots < 1 ||
+    //   options.numPlayers + options.numBots > 6
+    // ) {
+    //   throw new Error('Invalid number of players or bots.');
+    // }
+
+    // Ensure there's at least one player (bot or human)
+    if (options.numPlayers + options.numBots < 1) {
+      throw new Error('Must have at least one player or bot.');
     }
 
-    if (
-      options.numPlayers < 1 ||
-      options.numBots < 1 ||
-      options.numPlayers + options.numBots > 6
-    ) {
-      throw new Error('Invalid number of players or bots.');
+    // Ensure the total player count doesn't exceed the maximum limit
+    if (options.numPlayers + options.numBots > 6) {
+      throw new Error('Total number of players and bots should not exceed 6.');
     }
+
     this.setState(new MyRoomState());
     this.gameKey = generateGameKey();
     gameKeyToRoomId[this.gameKey] = this.roomId;
+
+    this.state.numPlayers = options.numPlayers;
+    this.state.numBots = options.numBots;
+
     this.broadcast('notification', { text: 'Starting game with bot!' });
     //notification
     this.sendNotification('Game created. Waiting for players to join...');
