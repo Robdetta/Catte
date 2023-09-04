@@ -73,12 +73,6 @@ export default class Main extends Phaser.Scene {
       // playerAvatar.setInteractive();
 
       console.log(`Player ${i + 1} position: x=${x}, y=${y}`);
-
-      this.input.on('gameobjectup', (pointer, gameObject) => {
-        if (gameObject === playerAvatar) {
-          // Player avatar was clicked, do something!
-        }
-      });
     }
 
     getDeck()
@@ -115,8 +109,35 @@ export default class Main extends Phaser.Scene {
       )
       .setOrigin(0.5);
 
+    // Initialize layout
+    this.updateLayout();
+
     // Add a listener for the resize event
     this.scale.on('resize', this.handleResize, this);
+  }
+
+  updateLayout() {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+    const isPortrait = height > width;
+
+    if (isPortrait) {
+      this.setupPortraitLayout();
+    } else {
+      this.setupLandscapeLayout();
+    }
+  }
+
+  setupPortraitLayout() {
+    // Position the current player's cards at the bottom.
+    // Place other players' cards/cards representation on the sides.
+    // Position game information, buttons, etc.
+  }
+
+  setupLandscapeLayout() {
+    // Position the current player's cards at the bottom.
+    // Distribute other players' cards across the top.
+    // Position game information, buttons, etc.
   }
 
   shuffleDeck(deck: string[]): string[] {

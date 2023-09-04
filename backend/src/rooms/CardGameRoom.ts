@@ -26,6 +26,7 @@ export class CardGameRoom extends Room<MyRoomState> {
     // ) {
     //   throw new Error('Invalid number of players or bots.');
     // }
+    this.maxClients = options.numPlayers + options.numBots; // Dynamically set maxClients based on options
 
     // Ensure there's at least one player (bot or human)
     if (options.numPlayers + options.numBots < 1) {
@@ -52,9 +53,9 @@ export class CardGameRoom extends Room<MyRoomState> {
 
     // Create bot players
     for (let i = 0; i < options.numBots; i++) {
-      // For bots, you can generate a unique ID using a combination of the current time, iteration, and a bot prefix
       const uniqueBotID = `BOT_${Date.now()}_${i}`;
-      players.push(new Player(uniqueBotID, 'BotName', true));
+      const botPlayer = new Player(uniqueBotID, 'BotName', true);
+      this.state.bots.set(uniqueBotID, botPlayer);
     }
 
     // For demonstration purposes, let's deal 5 cards to each player upon room creation
@@ -76,23 +77,36 @@ export class CardGameRoom extends Room<MyRoomState> {
   }
 
   onJoin(client: Client, options: any) {
+    // Calculate the total number of clients (players + bots) currently in the room
+    const totalClients = this.state.numPlayers + this.state.numBots;
+
+    // Check if room is full based on numPlayers and numBots values
+    if (totalClients >= this.maxClients) {
+      console.log('Room is full!');
+      this.sendNotification(`Room is full!`);
+      // Optionally, send a message to the client or disconnect them.
+      return;
+    }
+
     console.log(client.sessionId, 'joined!');
     const newPlayer = new Player(client.sessionId, 'PlayerName'); // Name can come from options or another mechanism
-    players.push(newPlayer);
+    this.state.players.set(client.sessionId, newPlayer); // Use `set` method to add to MapSchema
+    this.state.numPlayers++;
     this.sendNotification(`Player ${client.sessionId} joined the game.`);
-    // Deal initial cards to the new player if needed
-    this.state.playerCount++;
   }
 
   onLeave(client: Client, consented: boolean) {
     console.log(client.sessionId, 'left!');
-    const playerIndex = players.findIndex((p) => p.id === client.sessionId);
-    if (playerIndex !== -1) {
-      players.splice(playerIndex, 1);
-      nextTurn();
+    const leavingPlayer = this.state.players.get(client.sessionId);
+    if (leavingPlayer) {
+      if (leavingPlayer.isBot) {
+        this.state.numBots--;
+      } else {
+        this.state.numPlayers--;
+      }
+      this.state.players.delete(client.sessionId); // Use `delete` method to remove from MapSchema      nextTurn();
       this.sendNotification(`Player ${client.sessionId} left the game.`);
     }
-    this.state.playerCount--;
   }
 
   onDispose() {
