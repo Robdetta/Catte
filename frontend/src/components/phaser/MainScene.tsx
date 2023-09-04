@@ -42,6 +42,13 @@ export default class Main extends Phaser.Scene {
     const numBots = room.state.numBots;
 
     const totalPlayers = numBots + numPlayers;
+
+    const players: {
+      avatar: Phaser.GameObjects.Image;
+      hand: Phaser.GameObjects.Image[];
+    }[] = [];
+    // Assuming you have determined currentPlayerIndex
+    const currentPlayerIndex = 0; // For demonstration purposes
     console.log('Number of human players:', numPlayers);
     console.log('Number of bots:', numBots);
 
@@ -50,13 +57,20 @@ export default class Main extends Phaser.Scene {
     const radius = 300; // Defines the circle's size.
     //this.scene.start('MainScene');
     for (let i = 0; i < totalPlayers; i++) {
-      const angle = ((i + 1) / (totalPlayers + 1)) * 2 * Math.PI;
+      // Adjust the angle calculation based on the current player
+      const adjustedIndex = (currentPlayerIndex + i) % totalPlayers;
+      const angle = ((adjustedIndex + 1) / (totalPlayers + 1)) * 2 * Math.PI;
       const x = centerX + radius * Math.cos(angle);
       const y = centerY + radius * Math.sin(angle);
       const playerAvatar = this.playerManager.createPlayer(x, y);
-
       playerAvatar.setScale(0.5); // scale it to 50% of its size
-      playerAvatar.setInteractive();
+      // Store the player in our array
+      players.push({
+        avatar: playerAvatar,
+        hand: [], // Initialize an empty hand
+      });
+
+      // playerAvatar.setInteractive();
 
       console.log(`Player ${i + 1} position: x=${x}, y=${y}`);
 
@@ -69,14 +83,12 @@ export default class Main extends Phaser.Scene {
 
     getDeck()
       .then((deck) => {
-        // Shuffle and deal the deck
         const shuffledDeck = this.shuffleDeck(deck);
-        const hands = this.dealCards(shuffledDeck, numPlayers, 5); // Assuming 5 cards each for now.
-        // Display the cards for each player
+        const hands = this.dealCards(shuffledDeck, numPlayers, 5);
         hands.forEach((hand, playerIndex) => {
           const player = players[playerIndex];
           hand.forEach((card, cardIndex) => {
-            const xOffset = 30; // Horizontal gap between cards.
+            const xOffset = 30;
             const cardImage = this.add.image(
               player.avatar.x + cardIndex * xOffset,
               player.avatar.y + 100,
