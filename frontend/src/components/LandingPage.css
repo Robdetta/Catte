@@ -37,3 +37,9 @@
   align-items: center;
   margin-top: 20px;
 }
+
+.error-message {
+  color: red;
+  margin-top: 10px;
+  font-weight: bold;
+}

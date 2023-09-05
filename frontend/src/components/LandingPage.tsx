@@ -2,17 +2,15 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LandingPage.css';
 import * as roomService from '../services/roomService';
-import Notification from './notification/notification';
 
 //const client = new Client('ws://localhost:2567');
 function LandingPage() {
-  const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
-
   const [roomKey, setRoomKey] = useState<string>('');
   const navigate = useNavigate();
   const [numPlayers, setNumPlayers] = useState(1);
   const [numBots, setNumBots] = useState(0);
   const [playerName, setPlayerName] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const createRoom = async () => {
     try {
@@ -42,6 +40,12 @@ function LandingPage() {
       navigate(`/game/${gameKey}?sessionId=${sessionId}`);
     } catch (error) {
       console.error('Error joining room:', error);
+      // Check the error message and set the errorMessage state accordingly
+      if (error.message.includes('Room is full')) {
+        setErrorMessage('Room is full. Please try another room or wait.');
+      } else {
+        setErrorMessage('An unexpected error occurred. Please try again.');
+      }
     }
   };
 
@@ -127,6 +131,7 @@ function LandingPage() {
           Join Game
         </button>
       </div>
+      {errorMessage && <div className='error-message'>{errorMessage}</div>}
     </div>
   );
 }

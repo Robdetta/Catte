@@ -14,18 +14,6 @@ export class CardGameRoom extends Room<MyRoomState> {
   }
 
   onCreate(options: any) {
-    // If only 1 human player is selected and no bots, adjust numBots to 1
-    // if (options.numPlayers === 1 && options.numBots === 0) {
-    //   options.numBots = 1;
-    // }
-
-    // if (
-    //   options.numPlayers < 1 ||
-    //   options.numBots < 1 ||
-    //   options.numPlayers + options.numBots > 6
-    // ) {
-    //   throw new Error('Invalid number of players or bots.');
-    // }
     this.maxClients = options.numPlayers + options.numBots; // Dynamically set maxClients based on options
 
     // Ensure there's at least one player (bot or human)
@@ -42,7 +30,7 @@ export class CardGameRoom extends Room<MyRoomState> {
     this.gameKey = generateGameKey();
     gameKeyToRoomId[this.gameKey] = this.roomId;
 
-    this.state.numPlayers = options.numPlayers;
+    //this.state.numPlayers = options.numPlayers;
     this.state.numBots = options.numBots;
 
     this.broadcast('notification', { text: 'Starting game with bot!' });
@@ -83,9 +71,7 @@ export class CardGameRoom extends Room<MyRoomState> {
     // Check if room is full based on numPlayers and numBots values
     if (totalClients >= this.maxClients) {
       console.log('Room is full!');
-      this.sendNotification(`Room is full!`);
-      // Optionally, send a message to the client or disconnect them.
-      return;
+      throw new Error('Room is full!'); // This will inform the client that the room is full
     }
 
     console.log(client.sessionId, 'joined!');
