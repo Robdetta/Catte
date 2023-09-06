@@ -1,12 +1,13 @@
-// MainScene.ts
 import Phaser from 'phaser';
 import { getDeck } from '../../services/deckService';
 import PlayerManager from './helpers/PlayerManager';
 import { getRoom } from './helpers/roomStore';
 
 export default class Main extends Phaser.Scene {
-  playerManager: PlayerManager;
-  welcomeText: Phaser.GameObjects.Text | null = null;
+  private playerManager: PlayerManager;
+  private welcomeText: Phaser.GameObjects.Text | null = null;
+  private playerSprites: { [key: string]: Phaser.GameObjects.Sprite } = {};
+
   constructor() {
     super({ key: 'MainScene' });
     this.playerManager = new PlayerManager(this);
@@ -18,85 +19,138 @@ export default class Main extends Phaser.Scene {
   }
 
   preload() {
-    // Load any assets here
-    // Assuming card.json references images like "card_1.png", "card_2.png", etc.
     this.load.atlas('cards', '/src/assets/cards.png', '/src/assets/cards.json');
-
-    // place to load player avatar assets
     this.load.image('playerAvatar', 'path_to_player_avatar_image.png');
   }
 
   create() {
-    // Use the manager to create players
-    // Access the data
-    // Retrieve the data from the game's registry
-    // const numPlayers = 6; // We'll hardcode this for now
     const room = getRoom();
-
+    console.log('Fetched Room:', room);
     if (!room) {
       console.error('No room data available');
-      return; // or handle this situation as you see fit.
+      return;
     }
 
-    const numPlayers = room.state.numPlayers;
-    const numBots = room.state.numBots;
-
-    const totalPlayers = numBots + numPlayers;
-
-    const players: {
-      avatar: Phaser.GameObjects.Image;
-      hand: Phaser.GameObjects.Image[];
-    }[] = [];
-    // Assuming you have determined currentPlayerIndex
-    const currentPlayerIndex = 0; // For demonstration purposes
-    console.log('Number of human players:', numPlayers);
-    console.log('Number of bots:', numBots);
-
-    const centerX = this.cameras.main.centerX;
-    const centerY = this.cameras.main.centerY;
-    const radius = 300; // Defines the circle's size.
-    //this.scene.start('MainScene');
-    for (let i = 0; i < totalPlayers; i++) {
-      // Adjust the angle calculation based on the current player
-      const adjustedIndex = (currentPlayerIndex + i) % totalPlayers;
-      const angle = ((adjustedIndex + 1) / (totalPlayers + 1)) * 2 * Math.PI;
-      const x = centerX + radius * Math.cos(angle);
-      const y = centerY + radius * Math.sin(angle);
-      const playerAvatar = this.playerManager.createPlayer(x, y);
-      playerAvatar.setScale(0.5); // scale it to 50% of its size
-      // Store the player in our array
-      players.push({
-        avatar: playerAvatar,
-        hand: [], // Initialize an empty hand
-      });
-
-      // playerAvatar.setInteractive();
-
-      console.log(`Player ${i + 1} position: x=${x}, y=${y}`);
+    if (
+      !room.state ||
+      room.state.numPlayers === undefined ||
+      room.state.numBots === undefined
+    ) {
+      console.error('State properties missing.');
+      return;
     }
+
+    const { numPlayers, numBots } = room.state;
+    const totalPlayers = numPlayers + numBots;
+    console.log(room.state);
+
+    console.log('Room State:', room.state);
+    console.log('Number of Players:', room.state.numPlayers);
+    console.log('Number of Bots:', room.state.numBots);
+    console.log('Players:', room.state.players);
+
+    room.onStateChange(this.updateUI.bind(this));
+
+    this.displayPlayers(totalPlayers);
 
     getDeck()
       .then((deck) => {
         const shuffledDeck = this.shuffleDeck(deck);
         const hands = this.dealCards(shuffledDeck, numPlayers, 5);
-        hands.forEach((hand, playerIndex) => {
-          const player = players[playerIndex];
-          hand.forEach((card, cardIndex) => {
-            const xOffset = 30;
-            const cardImage = this.add.image(
-              player.avatar.x + cardIndex * xOffset,
-              player.avatar.y + 100,
-              'cards',
-              card,
-            );
-            player.hand.push(cardImage);
-          });
-        });
+        this.displayCards(hands);
       })
       .catch((error) => {
-        console.error('Fetch error: ' + error.message);
+        console.error('Fetch error:', error.message);
       });
-    // Adjust properties if needed, such as setting scale or interactive properties.
+
+    this.initWelcomeText();
+    this.updateLayout();
+    this.scale.on('resize', this.handleResize, this);
+  }
+
+  private displayPlayers(totalPlayers: number) {
+    const currentPlayerIndex = 0;
+    const { centerX, centerY } = this.cameras.main;
+    const radius = 300;
+
+    for (let i = 0; i < totalPlayers; i++) {
+      const adjustedIndex = (currentPlayerIndex + i) % totalPlayers;
+      const angle = ((adjustedIndex + 1) / (totalPlayers + 1)) * 2 * Math.PI;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+
+      // Using PlayerManager to create players
+      const playerAvatar = this.playerManager.createPlayer(x, y);
+      playerAvatar.setScale(0.5);
+
+      console.log(`Player ${i + 1} position: x=${x}, y=${y}`);
+    }
+  }
+
+  private updateUI(state) {
+    this.clearPlayersUI();
+    console.log('Updating UI with state:', state);
+    for (let playerId in state.players) {
+      const player = state.players[playerId];
+      this.addPlayerToUI(player);
+    }
+  }
+
+  private addPlayerToUI(player) {
+    let sprite = this.add.sprite(player.x, player.y, 'playerSprite');
+    sprite.setTint(player.color);
+    this.playerSprites[player.id] = sprite;
+  }
+
+  private clearPlayersUI() {
+    for (let playerId in this.playerSprites) {
+      this.playerSprites[playerId].destroy();
+    }
+    this.playerSprites = {};
+  }
+
+  private displayCards(hands: string[][]) {
+    const room = getRoom();
+    if (!room || !room.state || !room.state.players) {
+      console.error('No room, room state, or players available');
+      return;
+    }
+
+    // Convert players map to an array
+    const playersArray = [...room.state.players.values()];
+
+    // Check if there are the same number of hands as players
+    if (hands.length !== playersArray.length) {
+      console.error('Mismatch between number of hands and players');
+      return;
+    }
+
+    // Loop over each hand
+    hands.forEach((hand, handIndex) => {
+      const player = playersArray[handIndex];
+      if (!player || !player.avatar) {
+        console.error('Missing player or player avatar');
+        return; // Skip this iteration
+      }
+
+      // Display cards for this player
+      hand.forEach((card, cardIndex) => {
+        const xOffset = 30;
+        const cardImage = this.add.image(
+          player.avatar.x + cardIndex * xOffset,
+          player.avatar.y + 100,
+          'cards',
+          card,
+        );
+        if (!player.hand) {
+          player.hand = [];
+        }
+        player.hand.push(cardImage);
+      });
+    });
+  }
+
+  private initWelcomeText() {
     this.welcomeText = this.add
       .text(
         this.cameras.main.centerX,
@@ -108,63 +162,46 @@ export default class Main extends Phaser.Scene {
         },
       )
       .setOrigin(0.5);
-
-    // Initialize layout
-    this.updateLayout();
-
-    // Add a listener for the resize event
-    this.scale.on('resize', this.handleResize, this);
   }
 
-  updateLayout() {
-    const width = this.cameras.main.width;
-    const height = this.cameras.main.height;
-    const isPortrait = height > width;
-
-    if (isPortrait) {
-      this.setupPortraitLayout();
-    } else {
-      this.setupLandscapeLayout();
-    }
+  private updateLayout() {
+    const { width, height } = this.cameras.main;
+    if (height > width) this.setupPortraitLayout();
+    else this.setupLandscapeLayout();
   }
 
-  setupPortraitLayout() {
-    // Position the current player's cards at the bottom.
-    // Place other players' cards/cards representation on the sides.
-    // Position game information, buttons, etc.
+  private setupPortraitLayout() {
+    // Position for Portrait
   }
 
-  setupLandscapeLayout() {
-    // Position the current player's cards at the bottom.
-    // Distribute other players' cards across the top.
-    // Position game information, buttons, etc.
+  private setupLandscapeLayout() {
+    // Position for Landscape
   }
 
-  shuffleDeck(deck: string[]): string[] {
+  private shuffleDeck(deck: string[]): string[] {
     for (let i = deck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [deck[i], deck[j]] = [deck[j], deck[i]]; // Swap elements
+      [deck[i], deck[j]] = [deck[j], deck[i]];
     }
     return deck;
   }
 
-  dealCards(
+  private dealCards(
     deck: string[],
     numPlayers: number,
     cardsPerPlayer: number,
   ): string[][] {
     const hands: string[][] = Array.from({ length: numPlayers }, () => []);
-
     for (let i = 0; i < cardsPerPlayer; i++) {
       for (let j = 0; j < numPlayers; j++) {
-        const dealtCard = deck.pop(); // Take the top card
+        const dealtCard = deck.pop();
         if (dealtCard) hands[j].push(dealtCard);
       }
     }
-    return hands; // Returns an array of hands, where each hand is an array of card filenames
+    return hands;
   }
 
-  handleResize(gameSize: Phaser.Structs.Size) {
+  private handleResize(gameSize: Phaser.Structs.Size) {
     if (this.welcomeText) {
       this.welcomeText.setPosition(gameSize.width / 2, gameSize.height / 2);
     }

@@ -44,7 +44,7 @@ function LandingPage() {
       if (error.message.includes('Room is full')) {
         setErrorMessage('Room is full. Please try another room or wait.');
       } else {
-        setErrorMessage('An unexpected error occurred. Please try again.');
+        setErrorMessage('Room is full');
       }
     }
   };

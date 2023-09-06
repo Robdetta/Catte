@@ -75,7 +75,10 @@ export class CardGameRoom extends Room<MyRoomState> {
     }
 
     console.log(client.sessionId, 'joined!');
-    const newPlayer = new Player(client.sessionId, 'PlayerName'); // Name can come from options or another mechanism
+    const newPlayer = new Player();
+    newPlayer.id = client.sessionId;
+    newPlayer.name = 'PlayerName'; // Name can come from options or another mechanism, as you've mentioned
+
     this.state.players.set(client.sessionId, newPlayer); // Use `set` method to add to MapSchema
     this.state.numPlayers++;
     this.sendNotification(`Player ${client.sessionId} joined the game.`);

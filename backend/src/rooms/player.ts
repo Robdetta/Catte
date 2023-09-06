@@ -1,17 +1,15 @@
-class Player {
-  id: string;
-  name: string;
-  hand: string[];
-  isTurn: boolean;
-  isBot: boolean; // Add this line
+import { Schema, type } from '@colyseus/schema';
 
-  constructor(id: string, name: string, isBot: boolean = false) {
-    this.id = id;
-    this.name = name;
-    this.hand = [];
-    this.isTurn = false;
-    this.isBot = isBot; // And this line
-  }
+export class Player extends Schema {
+  @type('string') id: string;
+  @type('string') name: string;
+  @type(['string']) hand: string[] = [];
+  @type('boolean') isTurn: boolean = false;
+  @type('boolean') isBot: boolean = false;
+
+  @type('number') x: number = 0;
+  @type('number') y: number = 0;
+  @type('number') color: number = 0xffffff; // This is white in hex
 
   drawCard(card: string): void {
     this.hand.push(card);
@@ -22,6 +20,7 @@ class Player {
   }
 }
 
+// you can keep the players array and nextTurn function if they're needed elsewhere
 let players: Player[] = [];
 let currentPlayerIndex: number = 0;
 
@@ -31,4 +30,4 @@ function nextTurn(): void {
   players[currentPlayerIndex].isTurn = true;
 }
 
-export { Player, players, nextTurn };
+export { players, nextTurn };
