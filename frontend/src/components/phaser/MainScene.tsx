@@ -67,33 +67,52 @@ export default class Main extends Phaser.Scene {
     this.updateLayout();
     this.scale.on('resize', this.handleResize, this);
   }
+  private displayPlayers() {
+    const room = getRoom();
+    if (!room || !room.state || !room.state.players) {
+      console.error('No room, room state, or players available');
+      return;
+    }
 
-  private displayPlayers(totalPlayers: number) {
-    const currentPlayerIndex = 0;
+    const playersArray = Array.from(room.state.players.values());
+
     const { centerX, centerY } = this.cameras.main;
     const radius = 300;
 
-    for (let i = 0; i < totalPlayers; i++) {
-      const adjustedIndex = (currentPlayerIndex + i) % totalPlayers;
-      const angle = ((adjustedIndex + 1) / (totalPlayers + 1)) * 2 * Math.PI;
+    playersArray.forEach((player, index) => {
+      const angle = (index / playersArray.length) * 2 * Math.PI;
       const x = centerX + radius * Math.cos(angle);
       const y = centerY + radius * Math.sin(angle);
 
-      // Using PlayerManager to create players
       const playerAvatar = this.playerManager.createPlayer(x, y);
       playerAvatar.setScale(0.5);
 
-      console.log(`Player ${i + 1} position: x=${x}, y=${y}`);
-    }
+      // You may want to set a unique identifier to the playerAvatar
+      // so you can easily update or delete it later
+      playerAvatar.setData('id', player.id);
+
+      console.log(`Player ${player.name} position: x=${x}, y=${y}`);
+    });
   }
 
   private updateUI(state) {
-    this.clearPlayersUI();
-    console.log('Updating UI with state:', state);
-    for (let playerId in state.players) {
-      const player = state.players[playerId];
-      this.addPlayerToUI(player);
-    }
+    const existingPlayerIds = Object.keys(this.playerSprites);
+    const currentPlayerIds = Object.keys(state.players);
+
+    // Remove players that left the game
+    existingPlayerIds.forEach((id) => {
+      if (!currentPlayerIds.includes(id)) {
+        this.playerSprites[id].destroy();
+        delete this.playerSprites[id];
+      }
+    });
+
+    // Add new players
+    currentPlayerIds.forEach((id) => {
+      if (!existingPlayerIds.includes(id)) {
+        this.addPlayerToUI(state.players[id]);
+      }
+    });
   }
 
   private addPlayerToUI(player) {
