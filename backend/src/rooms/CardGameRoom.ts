@@ -40,16 +40,13 @@ export class CardGameRoom extends Room<MyRoomState> {
 
     const totalPlayers = options.numPlayers + options.numBots;
 
-    this.onMessage('playerReady', (client, message) => {
+    this.onMessage('playerReady', (client) => {
       const player = this.state.players.get(client.sessionId);
+      //Notify all clients that this player is ready
+      this.broadcast('notification', { text: `${player.name} is ready!` });
       if (player) {
         player.isReady = true;
-        this.sendNotification(`Player ${client.sessionId} is ready.`);
-
-        //check if all players are ready and start the game if they are
-        if (Array.from(this.state.players.values()).every((p) => p.isReady)) {
-          this.startGame();
-        }
+        this.checkIfAllPlayersReady();
       }
     });
 
@@ -117,7 +114,13 @@ export class CardGameRoom extends Room<MyRoomState> {
   }
 
   startGame() {
-    //set game to playing
+    //Ensure that the game is currently in the 'waiting' state before starting
+    if (this.state.gameState !== 'waiting') {
+      console.log('Cannot start the game; game is not in the waiting state.');
+      return;
+    }
+
+    //Set the game to 'playing' state
     this.state.gameState = 'playing';
 
     //reset all player status (for future rounds)
@@ -133,6 +136,17 @@ export class CardGameRoom extends Room<MyRoomState> {
 
     //notify clients that the game has started
     this.broadcast('gameStart', { message: 'The game has started!' });
+  }
+
+  private checkIfAllPlayersReady() {
+    let allPlayersReady = [
+      ...this.state.players.values(),
+      ...this.state.bots.values(),
+    ].every((player) => player.isReady);
+    if (allPlayersReady) {
+      this.sendNotification('All players are ready. Starting the game...');
+      this.startGame();
+    }
   }
 
   handleTurnLogic() {

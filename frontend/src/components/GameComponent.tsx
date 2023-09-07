@@ -24,11 +24,23 @@ function GameComponent() {
       setTimeout(() => setNotification(null), 5000);
     };
 
+    const handleGameStart = (message: { message: string }) => {
+      console.log(message);
+    };
+
+    const handleTurnChange = (message: { newTurnPlayerId: string }) => {
+      console.log('New player turn:', message.newTurnPlayerId);
+    };
+
     room.onMessage('notification', handleNotification);
+    room.onMessage('gameStart', handleGameStart);
+    room.onMessage('turnChange', handleTurnChange);
 
     // Cleanup listeners on component unmount
     return () => {
       room.onMessage('notification', handleNotification);
+      room.onMessage('gameStart', handleGameStart);
+      room.onMessage('turnChange', handleTurnChange);
     };
   }, [room]);
 
@@ -42,22 +54,20 @@ function GameComponent() {
       <PhaserGame />
       <button
         onClick={() => {
-          console.log('Button clicked');
           if (room) {
-            // Check if room is not null before sending message
-            room.send('type', { type: 'drawCard' });
+            room.send('playerReady', {});
           } else {
             console.error('Room is not defined!');
           }
         }}
         style={{
           position: 'absolute',
-          top: '10px', // Adjust as needed
-          left: '10px', // Adjust as needed
-          zIndex: 1000, // Ensure it's above the Phaser game
+          top: '50px',
+          left: '10px',
+          zIndex: 1000,
         }}
       >
-        Draw Card
+        Ready
       </button>
     </div>
   );
