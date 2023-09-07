@@ -3,6 +3,19 @@ import { getDeck } from '../../services/deckService';
 import PlayerManager from './helpers/PlayerManager';
 import { getRoom, getCurrentPlayerSessionId } from './helpers/roomStore';
 
+interface Player {
+  id: string;
+  color: number;
+  x?: number;
+  y?: number;
+  // ... other properties
+}
+
+interface State {
+  players: Map<string, Player>;
+  // ... other properties
+}
+
 export default class Main extends Phaser.Scene {
   private playerManager: PlayerManager;
   private welcomeText: Phaser.GameObjects.Text | null = null;
@@ -81,11 +94,11 @@ export default class Main extends Phaser.Scene {
     const playersArray = Array.from(room.state.players.values());
     playersArray.forEach((player, index) => {
       const { x, y } = this.calculatePlayerPosition(index, playersArray.length);
-      this.addPlayerToUI(player, x, y);
+      this.addPlayerToUI(player as Player, x, y);
     });
   }
 
-  private updateUI(state) {
+  private updateUI(state: State) {
     const currentPlayerIds = [...state.players.keys()];
     const exisingPlayerIds = Object.keys(this.playerSprites);
 
@@ -116,13 +129,13 @@ export default class Main extends Phaser.Scene {
     });
   }
 
-  private addPlayerToUI(player, x: number, y: number) {
+  private addPlayerToUI(player: Player, x: number, y: number) {
     //... (existing logic to add player sprite to UI)
     const sprite = this.add.sprite(x, y, 'playerSprite').setTint(player.color);
     this.playerSprites[player.id] = sprite;
   }
 
-  private updatePlayerPositionInUI(player, x: number, y: number) {
+  private updatePlayerPositionInUI(player: Player, x: number, y: number) {
     const sprite = this.playerSprites[player.id];
     if (sprite) {
       sprite.setPosition(x, y);
@@ -134,13 +147,6 @@ export default class Main extends Phaser.Scene {
       this.playerSprites[playerId].destroy();
       delete this.playerSprites[playerId];
     }
-  }
-
-  private clearPlayersUI() {
-    for (let playerId in this.playerSprites) {
-      this.playerSprites[playerId].destroy();
-    }
-    this.playerSprites = {};
   }
 
   private displayCards(hands: string[][]) {
@@ -192,7 +198,9 @@ export default class Main extends Phaser.Scene {
     const radius = 300;
 
     const currentPlayerId = this.getCurrentPlayerId();
-    const playersArray = Array.from(getRoom()?.state.players.values());
+    const playersArray = Array.from(
+      getRoom()?.state.players.values(),
+    ) as Player[];
     const currentPlayerIndex = playersArray.findIndex(
       (player) => player.id === currentPlayerId,
     );
