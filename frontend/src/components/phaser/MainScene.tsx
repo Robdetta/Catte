@@ -78,18 +78,7 @@ export default class Main extends Phaser.Scene {
       console.error('No room, room state, or players available');
       return;
     }
-
     const playersArray = Array.from(room.state.players.values());
-
-    //const { centerX, centerY } = this.cameras.main;
-    //const radius = 300;
-
-    const currentPlayerId = this.getCurrentPlayerId();
-
-    const currentPlayerIndex = playersArray.findIndex(
-      (player) => player.id === currentPlayerId,
-    );
-
     playersArray.forEach((player, index) => {
       const { x, y } = this.calculatePlayerPosition(index, playersArray.length);
       this.addPlayerToUI(player, x, y);
@@ -201,13 +190,13 @@ export default class Main extends Phaser.Scene {
     const radius = 300;
 
     const currentPlayerId = this.getCurrentPlayerId();
-    const playersArray = Array.from(getRoom().state.players.values());
+    const playersArray = Array.from(getRoom()?.state.players.values());
     const currentPlayerIndex = playersArray.findIndex(
       (player) => player.id === currentPlayerId,
     );
 
-    const adjustedIndex = (index + currentPlayerIndex) % totalPlayers;
-    const angle = -Math.PI / 2 + (adjustedIndex / totalPlayers) * 2 * Math.PI;
+    const adjustedIndex = (index - currentPlayerIndex) % totalPlayers;
+    const angle = Math.PI / 2 + (adjustedIndex / totalPlayers) * 2 * Math.PI;
 
     const x = centerX + radius * Math.cos(angle);
     const y = centerY + radius * Math.sin(angle);
