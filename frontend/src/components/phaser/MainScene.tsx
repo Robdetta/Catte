@@ -67,6 +67,7 @@ export default class Main extends Phaser.Scene {
     this.updateLayout();
     this.scale.on('resize', this.handleResize, this);
   }
+
   private displayPlayers() {
     const room = getRoom();
     if (!room || !room.state || !room.state.players) {
@@ -80,24 +81,23 @@ export default class Main extends Phaser.Scene {
     const radius = 300;
 
     playersArray.forEach((player, index) => {
-      const angle = (index / playersArray.length) * 2 * Math.PI;
-      const x = centerX + radius * Math.cos(angle);
-      const y = centerY + radius * Math.sin(angle);
+      if (player) {
+        const angle = (index / playersArray.length) * 2 * Math.PI;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
 
-      const playerAvatar = this.playerManager.createPlayer(x, y);
-      playerAvatar.setScale(0.5);
-
-      // You may want to set a unique identifier to the playerAvatar
-      // so you can easily update or delete it later
-      playerAvatar.setData('id', player.id);
-
-      console.log(`Player ${player.name} position: x=${x}, y=${y}`);
+        this.addPlayerToUI(player, x, y);
+      } else {
+        console.error('Player in playersArray is undefined or null:', player);
+      }
     });
   }
 
   private updateUI(state) {
+    // Convert players map to an array of player IDs
+    const currentPlayerIds = [...state.players.keys()];
+
     const existingPlayerIds = Object.keys(this.playerSprites);
-    const currentPlayerIds = Object.keys(state.players);
 
     // Remove players that left the game
     existingPlayerIds.forEach((id) => {
@@ -110,13 +110,29 @@ export default class Main extends Phaser.Scene {
     // Add new players
     currentPlayerIds.forEach((id) => {
       if (!existingPlayerIds.includes(id)) {
-        this.addPlayerToUI(state.players[id]);
+        // Use state.players.get(id) to get the player data since state.players is a Map
+        const playerData = state.players.get(id);
+        if (playerData) {
+          this.addPlayerToUI(playerData);
+          console.log(playerData);
+        } else {
+          console.error('Player data not found for ID:', id);
+        }
       }
     });
   }
 
-  private addPlayerToUI(player) {
-    let sprite = this.add.sprite(player.x, player.y, 'playerSprite');
+  private addPlayerToUI(player, x?: number, y?: number) {
+    if (!player) {
+      console.error('Player is undefined or null:', player);
+      return;
+    }
+
+    // Use the provided x, y if they are given, otherwise use player's own x, y
+    const posX = x || player.x;
+    const posY = y || player.y;
+
+    let sprite = this.add.sprite(posX, posY, 'playerSprite');
     sprite.setTint(player.color);
     this.playerSprites[player.id] = sprite;
   }
