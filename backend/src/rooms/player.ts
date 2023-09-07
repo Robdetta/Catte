@@ -6,6 +6,8 @@ export class Player extends Schema {
   @type(['string']) hand: string[] = [];
   @type('boolean') isTurn: boolean = false;
   @type('boolean') isBot: boolean = false;
+  @type('boolean')
+  isReady: boolean = false;
 
   @type('number') x: number = 0;
   @type('number') y: number = 0;

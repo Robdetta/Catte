@@ -27,6 +27,7 @@ export class CardGameRoom extends Room<MyRoomState> {
     }
 
     this.setState(new MyRoomState());
+    this.state.gameState = 'waiting';
     this.gameKey = generateGameKey();
     gameKeyToRoomId[this.gameKey] = this.roomId;
 
@@ -38,6 +39,19 @@ export class CardGameRoom extends Room<MyRoomState> {
     this.sendNotification('Game created. Waiting for players to join...');
 
     const totalPlayers = options.numPlayers + options.numBots;
+
+    this.onMessage('playerReady', (client, message) => {
+      const player = this.state.players.get(client.sessionId);
+      if (player) {
+        player.isReady = true;
+        this.sendNotification(`Player ${client.sessionId} is ready.`);
+
+        //check if all players are ready and start the game if they are
+        if (Array.from(this.state.players.values()).every((p) => p.isReady)) {
+          this.startGame();
+        }
+      }
+    });
 
     // Create bot players
     for (let i = 0; i < options.numBots; i++) {
@@ -100,5 +114,37 @@ export class CardGameRoom extends Room<MyRoomState> {
 
   onDispose() {
     console.log('room', this.roomId, 'disposing...');
+  }
+
+  startGame() {
+    //set game to playing
+    this.state.gameState = 'playing';
+
+    //reset all player status (for future rounds)
+    Array.from(this.state.players.values()).forEach(
+      (player) => (player.isReady = false),
+    );
+
+    //deals cards to players
+    dealCards(Array.from(this.state.players.values()), 5);
+
+    //set the first player's turn
+    this.handleTurnLogic();
+
+    //notify clients that the game has started
+    this.broadcast('gameStart', { message: 'The game has started!' });
+  }
+
+  handleTurnLogic() {
+    //... existing logic
+    this.broadcast('turnChange', {
+      newTturnPlayerId: this.state.currentTurnPlayerId,
+    });
+  }
+
+  getNextPlayerId(): string {
+    //Implement logic to get the next player's ID. for now its random
+    const playerIds = Array.from(this.state.players.keys());
+    return playerIds[Math.floor(Math.random() * playerIds.length)];
   }
 }
