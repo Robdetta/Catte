@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { getDeck } from '../../services/deckService';
 import PlayerManager from './helpers/PlayerManager';
-import { getRoom } from './helpers/roomStore';
+import { getRoom, getCurrentPlayerSessionId } from './helpers/roomStore';
 
 export default class Main extends Phaser.Scene {
   private playerManager: PlayerManager;
@@ -21,6 +21,10 @@ export default class Main extends Phaser.Scene {
   preload() {
     this.load.atlas('cards', '/src/assets/cards.png', '/src/assets/cards.json');
     this.load.image('playerAvatar', 'path_to_player_avatar_image.png');
+  }
+
+  private getCurrentPlayerId(): string | null {
+    return getCurrentPlayerSessionId();
   }
 
   create() {
@@ -77,47 +81,51 @@ export default class Main extends Phaser.Scene {
 
     const playersArray = Array.from(room.state.players.values());
 
-    const { centerX, centerY } = this.cameras.main;
-    const radius = 300;
+    //const { centerX, centerY } = this.cameras.main;
+    //const radius = 300;
+
+    const currentPlayerId = this.getCurrentPlayerId();
+
+    const currentPlayerIndex = playersArray.findIndex(
+      (player) => player.id === currentPlayerId,
+    );
 
     playersArray.forEach((player, index) => {
-      if (player) {
-        const angle = (index / playersArray.length) * 2 * Math.PI;
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-
-        this.addPlayerToUI(player, x, y);
-      } else {
-        console.error('Player in playersArray is undefined or null:', player);
-      }
+      const { x, y } = this.calculatePlayerPosition(index, playersArray.length);
+      this.addPlayerToUI(player, x, y);
     });
   }
 
   private updateUI(state) {
     // Convert players map to an array of player IDs
     const currentPlayerIds = [...state.players.keys()];
-
     const existingPlayerIds = Object.keys(this.playerSprites);
-
-    // Remove players that left the game
-    existingPlayerIds.forEach((id) => {
-      if (!currentPlayerIds.includes(id)) {
-        this.playerSprites[id].destroy();
-        delete this.playerSprites[id];
-      }
-    });
 
     // Add new players
     currentPlayerIds.forEach((id) => {
       if (!existingPlayerIds.includes(id)) {
-        // Use state.players.get(id) to get the player data since state.players is a Map
         const playerData = state.players.get(id);
         if (playerData) {
-          this.addPlayerToUI(playerData);
-          console.log(playerData);
+          const totalPlayers = state.players.size;
+          const playerIndex = currentPlayerIds.indexOf(id);
+          const { x, y } = this.calculatePlayerPosition(
+            playerIndex,
+            totalPlayers,
+          );
+          this.addPlayerToUI(playerData, x, y);
+          console.log('Added player:', playerData);
         } else {
           console.error('Player data not found for ID:', id);
         }
+      }
+    });
+
+    // Remove players that left the game
+    existingPlayerIds.forEach((id) => {
+      if (!currentPlayerIds.includes(id)) {
+        this.playerSprites[id].destroy(); // Destroy the sprite
+        delete this.playerSprites[id]; // Remove from our record
+        console.log('Removed player with ID:', id);
       }
     });
   }
@@ -183,6 +191,28 @@ export default class Main extends Phaser.Scene {
         player.hand.push(cardImage);
       });
     });
+  }
+
+  private calculatePlayerPosition(
+    index: number,
+    totalPlayers: number,
+  ): { x: number; y: number } {
+    const { centerX, centerY } = this.cameras.main;
+    const radius = 300;
+
+    const currentPlayerId = this.getCurrentPlayerId();
+    const playersArray = Array.from(getRoom().state.players.values());
+    const currentPlayerIndex = playersArray.findIndex(
+      (player) => player.id === currentPlayerId,
+    );
+
+    const adjustedIndex = (index + currentPlayerIndex) % totalPlayers;
+    const angle = -Math.PI / 2 + (adjustedIndex / totalPlayers) * 2 * Math.PI;
+
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+
+    return { x, y };
   }
 
   private initWelcomeText() {
