@@ -86,52 +86,54 @@ export default class Main extends Phaser.Scene {
   }
 
   private updateUI(state) {
-    // Convert players map to an array of player IDs
     const currentPlayerIds = [...state.players.keys()];
-    const existingPlayerIds = Object.keys(this.playerSprites);
+    const exisingPlayerIds = Object.keys(this.playerSprites);
 
-    // Add new players
-    currentPlayerIds.forEach((id) => {
-      if (!existingPlayerIds.includes(id)) {
-        const playerData = state.players.get(id);
-        if (playerData) {
-          const totalPlayers = state.players.size;
-          const playerIndex = currentPlayerIds.indexOf(id);
-          const { x, y } = this.calculatePlayerPosition(
-            playerIndex,
-            totalPlayers,
-          );
-          this.addPlayerToUI(playerData, x, y);
-          console.log('Added player:', playerData);
+    //find IDs of players who left the game
+    const playersWhoLeft = exisingPlayerIds.filter(
+      (id) => !currentPlayerIds.includes(id),
+    );
+
+    //handle players who left
+    playersWhoLeft.forEach((id) => this.removePlayerFromUI(id));
+
+    //handle current players (both existing and new)
+    currentPlayerIds.forEach((id, index) => {
+      const playerData = state.players.get(id);
+      if (playerData) {
+        const { x, y } = this.calculatePlayerPosition(
+          index,
+          state.players.size,
+        );
+        if (exisingPlayerIds.includes(id)) {
+          this.updatePlayerPositionInUI(playerData, x, y);
         } else {
-          console.error('Player data not found for ID:', id);
+          this.addPlayerToUI(playerData, x, y);
         }
-      }
-    });
-
-    // Remove players that left the game
-    existingPlayerIds.forEach((id) => {
-      if (!currentPlayerIds.includes(id)) {
-        this.playerSprites[id].destroy(); // Destroy the sprite
-        delete this.playerSprites[id]; // Remove from our record
-        console.log('Removed player with ID:', id);
+      } else {
+        console.error('Player data not found for ID:', id);
       }
     });
   }
 
-  private addPlayerToUI(player, x?: number, y?: number) {
-    if (!player) {
-      console.error('Player is undefined or null:', player);
-      return;
-    }
-
-    // Use the provided x, y if they are given, otherwise use player's own x, y
-    const posX = x || player.x;
-    const posY = y || player.y;
-
-    let sprite = this.add.sprite(posX, posY, 'playerSprite');
-    sprite.setTint(player.color);
+  private addPlayerToUI(player, x: number, y: number) {
+    //... (existing logic to add player sprite to UI)
+    const sprite = this.add.sprite(x, y, 'playerSprite').setTint(player.color);
     this.playerSprites[player.id] = sprite;
+  }
+
+  private updatePlayerPositionInUI(player, x: number, y: number) {
+    const sprite = this.playerSprites[player.id];
+    if (sprite) {
+      sprite.setPosition(x, y);
+    }
+  }
+
+  private removePlayerFromUI(playerId: string) {
+    if (this.playerSprites[playerId]) {
+      this.playerSprites[playerId].destroy();
+      delete this.playerSprites[playerId];
+    }
   }
 
   private clearPlayersUI() {
