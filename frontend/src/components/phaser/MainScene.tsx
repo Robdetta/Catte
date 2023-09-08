@@ -141,7 +141,10 @@ export default class Main extends Phaser.Scene {
 
   private addPlayerToUI(player: Player, x: number, y: number) {
     //... (existing logic to add player sprite to UI)
-    const sprite = this.add.sprite(x, y, 'playerSprite').setTint(player.color);
+    const sprite = this.add
+      .sprite(x, y, 'playerSprite')
+      .setTint(player.color)
+      .setDepth(1);
     this.playerSprites[player.id] = sprite;
   }
 
@@ -184,10 +187,12 @@ export default class Main extends Phaser.Scene {
 
     // Define the offset values to position the cards in a row below the player's avatar
     const xOffset = 30; // horizontal space between cards
-    const yOffset = 80; // vertical space from the player avatar to the cards
+    const yOffset = -100; // vertical space from the player avatar to the cards
 
-    const baseX = currentPlayer.x ?? 0 - ((hand.length - 1) * xOffset) / 2;
-    const baseY = currentPlayer.y ?? 0;
+    // Calculate the total width occupied by the cards and find the starting X position to center the cards with respect to the avatar
+    const totalWidthOfCards = (hand.length - 1) * xOffset;
+    const baseX = (currentPlayer.x ?? 0) - totalWidthOfCards / 2;
+    const baseY = currentPlayer.y ?? 0 - yOffset;
 
     // Loop over the cards in the hand and create an image for each one
     hand.forEach((card, index) => {
@@ -239,7 +244,7 @@ export default class Main extends Phaser.Scene {
 
     if (isCurrentPlayer) {
       x = width / 2;
-      y = height - 100;
+      y = height - 150;
     } else {
       const radius = 300;
       const angle = Math.PI / 2 + (adjustedIndex / totalPlayers) * 2 * Math.PI;
