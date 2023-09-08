@@ -8,7 +8,7 @@ interface Player {
   color: number;
   x?: number;
   y?: number;
-  hand?: Phaser.GameObjects.Image[]; // ... other properties
+  hand?: string[]; // ... other properties
 }
 
 interface State {
@@ -25,6 +25,9 @@ export default class Main extends Phaser.Scene {
     super({ key: 'MainScene' });
     this.playerManager = new PlayerManager(this);
   }
+
+  private playerCardImages: { [playerId: string]: Phaser.GameObjects.Image[] } =
+    {};
 
   init(data: { numPlayers: number; numBots: number }) {
     this.data.set('numPlayers', data.numPlayers);
@@ -128,8 +131,11 @@ export default class Main extends Phaser.Scene {
       }
     });
     const currentPlayerId = this.getCurrentPlayerId();
-    if (currentPlayerId && state.players.get(currentPlayerId)?.hand) {
-      this.displayCards(state.players.get(currentPlayerId).hand);
+    if (currentPlayerId) {
+      const currentPlayer = state.players.get(currentPlayerId);
+      if (currentPlayer?.hand) {
+        this.displayCards(currentPlayer.hand); // here hand is an array of strings representing frame names
+      }
     }
   }
 
@@ -167,37 +173,39 @@ export default class Main extends Phaser.Scene {
     }
 
     const player = room.state.players.get(currentPlayerId);
-    if (!player || !player.avatar) {
+    if (!player) {
       console.error('Current player not found in room state');
       return;
     }
 
-    // Assuming that your player avatar has x and y properties to determine where on the screen their hand should be displayed. Adjust as necessary.
-    const baseX = player.avatar.x ?? 0;
-    const baseY = player.avatar.y ?? 0;
+    // Get the base coordinates from player data instead of the avatar
+    const baseX = player.x ?? 0;
+    const baseY = player.y ?? 0;
 
     // Clear previous hand if exists
-    if (player.hand) {
-      player.hand.forEach((cardImage) => cardImage.destroy());
-      player.hand = [];
+    if (this.playerCardImages[currentPlayerId]) {
+      this.playerCardImages[currentPlayerId].forEach((cardImage) =>
+        cardImage.destroy(),
+      );
+      this.playerCardImages[currentPlayerId] = [];
     } else {
-      player.hand = [];
+      this.playerCardImages[currentPlayerId] = [];
     }
 
     // Loop over the cards in the hand and create an image for each one, then add it to the player's hand array
     hand.forEach((card, index) => {
       const xOffset = 30; // Adjust as necessary to get the right spacing between cards
-
+      console.log(hand);
       // Create a new image for the card and set its position
       const cardImage = this.add.image(
         baseX + index * xOffset,
-        baseY + player.avatar.height / 2 + 10 + index * 20, // Adjust the offset to place cards below the avatar, considering the height of the avatar and giving some spacing between cards
+        baseY + 10 + index * 20, // Adjust the offset to place cards below the avatar
         'cards',
         card,
       );
 
       // Add the image to the player's hand array so it can be accessed and modified later
-      player.hand.push(cardImage);
+      this.playerCardImages[currentPlayerId].push(cardImage);
     });
   }
 
