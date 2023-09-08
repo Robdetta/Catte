@@ -175,47 +175,46 @@ export default class Main extends Phaser.Scene {
     // Clear previous hand if exists
     this.clearPreviousHands();
 
-    const player = room.state.players.get(currentPlayerId);
-    if (!player) {
+    // Get the current player and display their cards
+    const currentPlayer = room.state.players.get(currentPlayerId);
+    if (!currentPlayer) {
       console.error('Current player not found in room state');
       return;
-    }
-
-    // Get the base coordinates from player data instead of the avatar
-    const baseX = player.x ?? 0;
-    const baseY = player.y ?? 0;
-
-    // Clear previous hand if exists
-    if (this.playerCardImages[currentPlayerId]) {
-      this.playerCardImages[currentPlayerId].forEach((cardImage) =>
-        cardImage.destroy(),
-      );
-      this.playerCardImages[currentPlayerId] = [];
-    } else {
-      this.playerCardImages[currentPlayerId] = [];
     }
 
     // Define the offset values to position the cards in a row below the player's avatar
     const xOffset = 30; // horizontal space between cards
     const yOffset = 80; // vertical space from the player avatar to the cards
 
-    // Loop over the cards in the hand and create an image for each one, then add it to the player's hand array
+    const baseX = currentPlayer.x ?? 0 - ((hand.length - 1) * xOffset) / 2;
+    const baseY = currentPlayer.y ?? 0;
+
+    // Loop over the cards in the hand and create an image for each one
     hand.forEach((card, index) => {
       // Create a new image for the card and set its position
       const cardImage = this.add.image(
         baseX + index * xOffset,
-        baseY +
-          yOffset +
-          (currentPlayerId === player.id
-            ? this.cameras.main.height - baseY - 100
-            : 0), // Adjust the offset to place cards below the avatar
+        baseY + yOffset,
         'cards',
         card,
       );
 
       // Add the image to the player's hand array so it can be accessed and modified later
+      if (!this.playerCardImages[currentPlayerId]) {
+        this.playerCardImages[currentPlayerId] = [];
+      }
       this.playerCardImages[currentPlayerId].push(cardImage);
     });
+  }
+
+  private clearPreviousHands() {
+    // Loop through all player hands and destroy any existing card images
+    Object.values(this.playerCardImages).forEach((cardImages) => {
+      cardImages.forEach((cardImage) => cardImage.destroy());
+    });
+
+    // Reset the playerCardImages object
+    this.playerCardImages = {};
   }
 
   private calculatePlayerPosition(
@@ -231,18 +230,16 @@ export default class Main extends Phaser.Scene {
       (player) => player.id === currentPlayerId,
     );
 
-    const adjustedIndex = (index - currentPlayerIndex) % totalPlayers;
+    const adjustedIndex =
+      (index - currentPlayerIndex + totalPlayers) % totalPlayers;
     const isCurrentPlayer = adjustedIndex === 0;
 
-    //const angle = Math.PI / 2 + (adjustedIndex / totalPlayers) * 2 * Math.PI;
-
-    let x = 0; //centerX + radius * Math.cos(angle);
-    let y = 0; //centerY + radius * Math.sin(angle);
+    let x = 0;
+    let y = 0;
 
     if (isCurrentPlayer) {
-      // Position for the current player at the bottom of the screen
-      x = width / 2 - 150; // Adjust as necessary to center the cards under the avatar
-      y = height - 100; // Adjust based on the height of the avatar and cards
+      x = width / 2;
+      y = height - 100;
     } else {
       const radius = 300;
       const angle = Math.PI / 2 + (adjustedIndex / totalPlayers) * 2 * Math.PI;
@@ -250,6 +247,11 @@ export default class Main extends Phaser.Scene {
       x = width / 2 + radius * Math.cos(angle);
       y = height / 2 + radius * Math.sin(angle);
     }
+
+    // Update the player's x and y in the state
+    const player = playersArray[index];
+    player.x = x;
+    player.y = y;
 
     return { x, y };
   }
