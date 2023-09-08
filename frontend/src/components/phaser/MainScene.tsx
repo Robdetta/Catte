@@ -152,6 +152,7 @@ export default class Main extends Phaser.Scene {
       delete this.playerSprites[playerId];
     }
   }
+
   private displayCards(hand: string[]) {
     const currentPlayerId = this.getCurrentPlayerId();
     if (!currentPlayerId) {
@@ -166,14 +167,14 @@ export default class Main extends Phaser.Scene {
     }
 
     const player = room.state.players.get(currentPlayerId);
-    if (!player) {
+    if (!player || !player.avatar) {
       console.error('Current player not found in room state');
       return;
     }
 
-    // Assuming that your player objects have x and y properties to determine where on the screen their hand should be displayed. Adjust as necessary.
-    const baseX = player.x ?? 0;
-    const baseY = player.y ?? 0;
+    // Assuming that your player avatar has x and y properties to determine where on the screen their hand should be displayed. Adjust as necessary.
+    const baseX = player.avatar.x ?? 0;
+    const baseY = player.avatar.y ?? 0;
 
     // Clear previous hand if exists
     if (player.hand) {
@@ -190,7 +191,7 @@ export default class Main extends Phaser.Scene {
       // Create a new image for the card and set its position
       const cardImage = this.add.image(
         baseX + index * xOffset,
-        baseY + 100, // Adjust as necessary to get the right vertical position
+        baseY + player.avatar.height / 2 + 10 + index * 20, // Adjust the offset to place cards below the avatar, considering the height of the avatar and giving some spacing between cards
         'cards',
         card,
       );
