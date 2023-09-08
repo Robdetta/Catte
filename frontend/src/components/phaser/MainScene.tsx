@@ -73,15 +73,15 @@ export default class Main extends Phaser.Scene {
 
     this.displayPlayers(totalPlayers);
 
-    getDeck()
-      .then((deck) => {
-        const shuffledDeck = this.shuffleDeck(deck);
-        const hands = this.dealCards(shuffledDeck, numPlayers, 5);
-        this.displayCards(hands);
-      })
-      .catch((error) => {
-        console.error('Fetch error:', error.message);
-      });
+    // getDeck()
+    //   .then((deck) => {
+    //     const shuffledDeck = this.shuffleDeck(deck);
+    //     const hands = this.dealCards(shuffledDeck, numPlayers, 5);
+    //     this.displayCards(hands);
+    //   })
+    //   .catch((error) => {
+    //     console.error('Fetch error:', error.message);
+    //   });
 
     this.initWelcomeText();
     this.updateLayout();
