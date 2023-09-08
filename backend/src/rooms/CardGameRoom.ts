@@ -4,6 +4,7 @@ import { generateGameKey } from './gameKeyGenerator';
 import { gameKeyToRoomId } from './roomData';
 import { Player, players, nextTurn } from './player';
 import { dealCards, drawCardFromPile } from './deckMechanics';
+import axios from 'axios';
 
 export class CardGameRoom extends Room<MyRoomState> {
   maxClients = 6;
@@ -113,7 +114,7 @@ export class CardGameRoom extends Room<MyRoomState> {
     console.log('room', this.roomId, 'disposing...');
   }
 
-  startGame() {
+  async startGame() {
     //Ensure that the game is currently in the 'waiting' state before starting
     if (this.state.gameState !== 'waiting') {
       console.log('Cannot start the game; game is not in the waiting state.');
@@ -128,14 +129,36 @@ export class CardGameRoom extends Room<MyRoomState> {
       (player) => (player.isReady = false),
     );
 
+    let deck;
+    try {
+      const response = await axios.get('http://localhost:2567/deck');
+      deck = response.data;
+    } catch (error) {
+      console.log('Error fetching the deck', error);
+      return;
+    }
+
     //deals cards to players
-    dealCards(Array.from(this.state.players.values()), 5);
+    const players = Array.from(this.state.players.values());
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < players.length; j++) {
+        if (!players[j].hand) {
+          players[j].hand = [];
+        }
+        players[j].hand.push(deck.pop());
+      }
+    }
 
     //set the first player's turn
     this.handleTurnLogic();
 
-    //notify clients that the game has started
-    this.broadcast('gameStart', { message: 'The game has started!' });
+    // Notify clients that the game has started and send them their initial hands
+    this.broadcast('gameStart', {
+      message: 'The game has started!',
+      hands: Object.fromEntries(
+        players.map((player) => [player.id, player.hand]),
+      ),
+    });
   }
 
   private checkIfAllPlayersReady() {

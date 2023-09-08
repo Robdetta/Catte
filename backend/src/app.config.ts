@@ -2,6 +2,8 @@ import config from '@colyseus/tools';
 import { monitor } from '@colyseus/monitor';
 import { playground } from '@colyseus/playground';
 import { gameKeyToRoomId } from './rooms/roomData';
+import { generateShuffleDeck } from './rooms/schema/cardOperations';
+
 /**
  * Import your Room files
  */
@@ -67,31 +69,7 @@ export default config({
 
     // Generate and return a shuffled deck
     app.get('/deck', (req, res) => {
-      const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
-      const values = [
-        '2',
-        '3',
-        '4',
-        '5',
-        '6',
-        '7',
-        '8',
-        '9',
-        '10',
-        'Jack',
-        'Queen',
-        'King',
-        'Ace',
-      ];
-      let deck = [];
-
-      for (let suit of suits) {
-        for (let value of values) {
-          deck.push(`${suit}${value}`);
-        }
-      }
-
-      deck = deck.sort(() => Math.random() - 0.5);
+      const deck = generateShuffleDeck();
       res.json(deck);
     });
 
