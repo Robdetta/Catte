@@ -172,6 +172,9 @@ export default class Main extends Phaser.Scene {
       return;
     }
 
+    // Clear previous hand if exists
+    this.clearPreviousHands();
+
     const player = room.state.players.get(currentPlayerId);
     if (!player) {
       console.error('Current player not found in room state');
@@ -192,14 +195,20 @@ export default class Main extends Phaser.Scene {
       this.playerCardImages[currentPlayerId] = [];
     }
 
+    // Define the offset values to position the cards in a row below the player's avatar
+    const xOffset = 30; // horizontal space between cards
+    const yOffset = 80; // vertical space from the player avatar to the cards
+
     // Loop over the cards in the hand and create an image for each one, then add it to the player's hand array
     hand.forEach((card, index) => {
-      const xOffset = 30; // Adjust as necessary to get the right spacing between cards
-      console.log(hand);
       // Create a new image for the card and set its position
       const cardImage = this.add.image(
         baseX + index * xOffset,
-        baseY + 10 + index * 20, // Adjust the offset to place cards below the avatar
+        baseY +
+          yOffset +
+          (currentPlayerId === player.id
+            ? this.cameras.main.height - baseY - 100
+            : 0), // Adjust the offset to place cards below the avatar
         'cards',
         card,
       );
@@ -213,9 +222,7 @@ export default class Main extends Phaser.Scene {
     index: number,
     totalPlayers: number,
   ): { x: number; y: number } {
-    const { centerX, centerY } = this.cameras.main;
-    const radius = 300;
-
+    const { width, height } = this.cameras.main;
     const currentPlayerId = this.getCurrentPlayerId();
     const playersArray = Array.from(
       getRoom()?.state.players.values(),
@@ -225,10 +232,24 @@ export default class Main extends Phaser.Scene {
     );
 
     const adjustedIndex = (index - currentPlayerIndex) % totalPlayers;
-    const angle = Math.PI / 2 + (adjustedIndex / totalPlayers) * 2 * Math.PI;
+    const isCurrentPlayer = adjustedIndex === 0;
 
-    const x = centerX + radius * Math.cos(angle);
-    const y = centerY + radius * Math.sin(angle);
+    //const angle = Math.PI / 2 + (adjustedIndex / totalPlayers) * 2 * Math.PI;
+
+    let x = 0; //centerX + radius * Math.cos(angle);
+    let y = 0; //centerY + radius * Math.sin(angle);
+
+    if (isCurrentPlayer) {
+      // Position for the current player at the bottom of the screen
+      x = width / 2 - 150; // Adjust as necessary to center the cards under the avatar
+      y = height - 100; // Adjust based on the height of the avatar and cards
+    } else {
+      const radius = 300;
+      const angle = Math.PI / 2 + (adjustedIndex / totalPlayers) * 2 * Math.PI;
+
+      x = width / 2 + radius * Math.cos(angle);
+      y = height / 2 + radius * Math.sin(angle);
+    }
 
     return { x, y };
   }
