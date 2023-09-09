@@ -133,7 +133,6 @@ export class CardGameRoom extends Room<MyRoomState> {
     try {
       const response = await axios.get('http://localhost:2567/deck');
       deck = response.data;
-      console.log(deck);
     } catch (error) {
       console.log('Error fetching the deck', error);
       return;

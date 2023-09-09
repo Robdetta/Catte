@@ -8,11 +8,6 @@ export default class PlayerManager {
     this.scene = scene;
   }
 
-  // createPlayer(x: number, y: number): Player {
-  //   const player = new Player(this.scene, x, y);
-  //   this.players.push(player);
-  //   return player;
-  // }
   createPlayer(x: number, y: number): Phaser.GameObjects.Image {
     const player = new Player(this.scene, x, y);
     this.players.push(player);

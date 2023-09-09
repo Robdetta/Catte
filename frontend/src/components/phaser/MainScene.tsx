@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { getDeck } from '../../services/deckService';
 import PlayerManager from './helpers/PlayerManager';
 import { getRoom, getCurrentPlayerSessionId } from './helpers/roomStore';
 
@@ -69,23 +68,22 @@ export default class Main extends Phaser.Scene {
     console.log('Number of Bots:', room.state.numBots);
     console.log('Players:', room.state.players);
 
+    this.displayDeck();
     room.onStateChange(this.updateUI.bind(this));
 
     this.displayPlayers(totalPlayers);
 
-    // getDeck()
-    //   .then((deck) => {
-    //     const shuffledDeck = this.shuffleDeck(deck);
-    //     const hands = this.dealCards(shuffledDeck, numPlayers, 5);
-    //     this.displayCards(hands);
-    //   })
-    //   .catch((error) => {
-    //     console.error('Fetch error:', error.message);
-    //   });
-
     this.initWelcomeText();
     this.updateLayout();
     this.scale.on('resize', this.handleResize, this);
+  }
+
+  private displayDeck() {
+    const x = this.cameras.main.centerX;
+    const y = this.cameras.main.centerY - 100;
+    for (let i = 0; i < 52; i++) {
+      this.add.image(x, y - i * 0.5, 'cards', 'back').setDepth(i);
+    }
   }
 
   private displayPlayers() {
