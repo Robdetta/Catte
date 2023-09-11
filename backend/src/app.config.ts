@@ -67,12 +67,6 @@ export default config({
       return res.json({ roomId });
     });
 
-    // Generate and return a shuffled deck
-    app.get('/deck', (req, res) => {
-      const deck = generateShuffleDeck();
-      res.json(deck);
-    });
-
     /**
      * Use @colyseus/playground
      * (It is not recommended to expose this route in a production environment)

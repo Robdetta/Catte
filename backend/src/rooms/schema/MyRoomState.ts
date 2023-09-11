@@ -1,4 +1,4 @@
-import { Schema, MapSchema, type } from '@colyseus/schema';
+import { Schema, MapSchema, type, ArraySchema } from '@colyseus/schema';
 import { Player } from '../player';
 
 export class MyRoomState extends Schema {
@@ -13,6 +13,9 @@ export class MyRoomState extends Schema {
 
   @type({ map: Player })
   bots = new MapSchema<Player>(); // You can create a separate Bot class if bots have different behaviors or properties
+
+  @type(['string'])
+  deck = new ArraySchema<string>();
 
   @type('string')
   currentTurnPlayerId: string;

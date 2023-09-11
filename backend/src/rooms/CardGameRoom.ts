@@ -1,10 +1,11 @@
 import { Room, Client } from '@colyseus/core';
+import { ArraySchema } from '@colyseus/schema';
 import { MyRoomState } from './schema/MyRoomState';
 import { generateGameKey } from './gameKeyGenerator';
 import { gameKeyToRoomId } from './roomData';
 import { Player, players, nextTurn } from './player';
+import { generateShuffleDeck } from './schema/cardOperations';
 import { dealCards, drawCardFromPile } from './deckMechanics';
-import axios from 'axios';
 
 export class CardGameRoom extends Room<MyRoomState> {
   maxClients = 6;
@@ -28,6 +29,7 @@ export class CardGameRoom extends Room<MyRoomState> {
     }
 
     this.setState(new MyRoomState());
+    this.state.deck = new ArraySchema(...generateShuffleDeck());
     this.state.gameState = 'waiting';
     this.gameKey = generateGameKey();
     gameKeyToRoomId[this.gameKey] = this.roomId;
@@ -115,6 +117,7 @@ export class CardGameRoom extends Room<MyRoomState> {
   }
 
   async startGame() {
+    const deck = this.state.deck;
     //Ensure that the game is currently in the 'waiting' state before starting
     if (this.state.gameState !== 'waiting') {
       console.log('Cannot start the game; game is not in the waiting state.');
@@ -128,15 +131,6 @@ export class CardGameRoom extends Room<MyRoomState> {
     Array.from(this.state.players.values()).forEach(
       (player) => (player.isReady = false),
     );
-
-    let deck;
-    try {
-      const response = await axios.get('http://localhost:2567/deck');
-      deck = response.data;
-    } catch (error) {
-      console.log('Error fetching the deck', error);
-      return;
-    }
 
     //deals cards to players
     const playersArray = Array.from(this.state.players.values());
