@@ -73,6 +73,18 @@ export default class Main extends Phaser.Scene {
 
     this.displayPlayers(totalPlayers);
 
+    // Handle player disconnect
+    room.onLeave((sessionId) => {
+      console.log(`${sessionId} left the room`);
+      this.handlePlayerDisconnect(sessionId);
+    });
+
+    // Handle player reconnect
+    room.onJoin((sessionId) => {
+      console.log(`${sessionId} joined the room`);
+      this.handlePlayerReconnect(sessionId);
+    });
+
     this.initWelcomeText();
     this.updateLayout();
     this.scale.on('resize', this.handleResize, this);

@@ -13,6 +13,17 @@ function GameComponent() {
 
   const [notification, setNotification] = useState<string | null>(null);
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        console.log('Copying to clipboard was successful!');
+      },
+      (err) => {
+        console.error('Could not copy text: ', err);
+      },
+    );
+  };
+
   const room = getRoom();
   console.log(room);
 
@@ -69,6 +80,34 @@ function GameComponent() {
       >
         Ready
       </button>
+
+      {gameKey ? (
+        <button
+          onClick={() => gameKey && copyToClipboard(gameKey)}
+          style={{
+            position: 'absolute',
+            top: '100px', // Adjust as necessary
+            left: '10px',
+            zIndex: 1000,
+            backgroundColor: '#f0f0f0', // Styling the button a bit
+            border: '1px solid #ccc',
+            padding: '10px',
+          }}
+        >
+          {gameKey}
+        </button>
+      ) : (
+        <p
+          style={{
+            position: 'absolute',
+            top: '100px', // Adjust as necessary
+            left: '10px',
+            zIndex: 1000,
+          }}
+        >
+          Loading game key...
+        </p>
+      )}
     </div>
   );
 }
