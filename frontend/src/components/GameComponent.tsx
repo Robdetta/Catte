@@ -38,9 +38,9 @@ function GameComponent() {
 
     // Cleanup listeners on component unmount
     return () => {
-      room.onMessage('notification', handleNotification);
-      room.onMessage('gameStart', handleGameStart);
-      room.onMessage('turnChange', handleTurnChange);
+      // room.onMessage('notification', handleNotification);
+      // room.onMessage('gameStart', handleGameStart);
+      // room.onMessage('turnChange', handleTurnChange);
     };
   }, [room]);
 

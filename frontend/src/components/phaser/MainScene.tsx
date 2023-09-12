@@ -109,7 +109,10 @@ export default class Main extends Phaser.Scene {
     );
 
     //handle players who left
-    playersWhoLeft.forEach((id) => this.removePlayerFromUI(id));
+    playersWhoLeft.forEach((id) => {
+      this.removePlayerFromUI(id);
+      this.clearPlayerCards(id);
+    });
 
     //handle current players (both existing and new)
     currentPlayerIds.forEach((id, index) => {
@@ -123,6 +126,13 @@ export default class Main extends Phaser.Scene {
           this.updatePlayerPositionInUI(playerData, x, y);
         } else {
           this.addPlayerToUI(playerData, x, y);
+          // Update the player's cards in the UI
+          if (playerData.hand) {
+            this.displayCards(playerData.hand, id); // Pass player ID to displayCards method
+          }
+        } // Display card backs for other players
+        if (id !== this.getCurrentPlayerId()) {
+          this.displayCardBacksForPlayer(id, playerData, x, y);
         }
       } else {
         console.error('Player data not found for ID:', id);
@@ -133,6 +143,39 @@ export default class Main extends Phaser.Scene {
       const currentPlayer = state.players.get(currentPlayerId);
       if (currentPlayer?.hand) {
         this.displayCards(currentPlayer.hand); // here hand is an array of strings representing frame names
+      }
+    }
+  }
+
+  private clearPlayerCards(playerId: string) {
+    if (this.playerCardImages[playerId]) {
+      this.playerCardImages[playerId].forEach((cardImage) =>
+        cardImage.destroy(),
+      );
+      delete this.playerCardImages[playerId];
+    }
+  }
+
+  private displayCardBacksForPlayer(
+    _playerId: string,
+    playerData: Player,
+    x: number,
+    y: number,
+  ) {
+    if (playerData.hand) {
+      const numberOfCards = playerData.hand.length;
+      const xOffset = 30;
+      const yOffset = -100;
+      const baseX = x - ((numberOfCards - 1) * xOffset) / 2;
+      const baseY = y + yOffset;
+
+      for (let i = 0; i < numberOfCards; i++) {
+        this.add.image(
+          baseX + i * xOffset,
+          baseY,
+          'cards',
+          'card_back_frame_name',
+        );
       }
     }
   }
