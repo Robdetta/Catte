@@ -113,48 +113,45 @@ export default class Main extends Phaser.Scene {
 
   private updateUI(state: State) {
     const currentPlayerIds = [...state.players.keys()];
-    const exisingPlayerIds = Object.keys(this.playerSprites);
+    const existingPlayerIds = Object.keys(this.playerSprites);
 
-    //find IDs of players who left the game
-    const playersWhoLeft = exisingPlayerIds.filter(
-      (id) => !currentPlayerIds.includes(id),
-    );
+    // Handling players who left
+    existingPlayerIds
+      .filter((id) => !currentPlayerIds.includes(id))
+      .forEach((id) => {
+        this.removePlayerFromUI(id);
+        this.clearPlayerCards(id);
+      });
 
-    //handle players who left
-    playersWhoLeft.forEach((id) => {
-      this.removePlayerFromUI(id);
-      this.clearPlayerCards(id);
-    });
-
-    //handle current players (both existing and new)
+    // Handling current players (both existing and new)
     currentPlayerIds.forEach((id, index) => {
       const playerData = state.players.get(id);
-      if (playerData) {
-        const { x, y } = this.calculatePlayerPosition(
-          index,
-          state.players.size,
-        );
-        if (exisingPlayerIds.includes(id)) {
-          this.updatePlayerPositionInUI(playerData, x, y);
-        } else {
-          this.addPlayerToUI(playerData, x, y);
-          // Update the player's cards in the UI
-          if (playerData.hand) {
-            this.displayCards(playerData.hand, id); // Pass player ID to displayCards method
-          }
-        } // Display card backs for other players
-        if (id !== this.getCurrentPlayerId()) {
-          this.displayCardBacksForPlayer(id, playerData, x, y);
-        }
-      } else {
+      if (!playerData) {
         console.error('Player data not found for ID:', id);
+        return;
+      }
+      ``;
+
+      const { x, y } = this.calculatePlayerPosition(index, state.players.size);
+
+      if (existingPlayerIds.includes(id)) {
+        this.updatePlayerPositionInUI(playerData, x, y);
+      } else {
+        this.addPlayerToUI(playerData, x, y);
+        this.displayCards(playerData.hand ?? [], id);
+      }
+
+      if (id !== this.getCurrentPlayerId()) {
+        this.displayCardBacksForPlayer(id, playerData, x, y);
       }
     });
+
+    // Handling the current player's cards
     const currentPlayerId = this.getCurrentPlayerId();
     if (currentPlayerId) {
       const currentPlayer = state.players.get(currentPlayerId);
       if (currentPlayer?.hand) {
-        this.displayCards(currentPlayer.hand); // here hand is an array of strings representing frame names
+        this.displayCards(currentPlayer.hand, currentPlayerId);
       }
     }
   }
@@ -215,13 +212,66 @@ export default class Main extends Phaser.Scene {
     }
   }
 
-  private displayCards(hand: string[]) {
-    const currentPlayerId = this.getCurrentPlayerId();
-    if (!currentPlayerId) {
-      console.error('No current player ID found');
+  handlePlayerDisconnect(sessionId: string) {
+    const room = getRoom();
+    if (!room) {
+      console.error('Room is not available');
       return;
     }
 
+    // Find the player using sessionId
+    const player = findPlayerBySessionId(sessionId);
+
+    if (player) {
+      // Mark the player as disconnected in your game's state
+      player.isConnected = false;
+
+      // Update the UI to indicate that the player has disconnected
+      markPlayerAsDisconnected(player);
+    } else {
+      console.warn(`Player with session ID ${sessionId} not found`);
+    }
+  }
+
+  handlePlayerReconnect(sessionId: string) {
+    const room = getRoom();
+    if (!room) {
+      console.error('Room is not available');
+      return;
+    }
+
+    // Find the player using sessionId
+    const player = findPlayerBySessionId(sessionId);
+
+    if (player) {
+      // Mark the player as connected in your game's state
+      player.isConnected = true;
+
+      // Update the UI to indicate that the player has reconnected
+      markPlayerAsReconnected(player);
+    } else {
+      console.warn(`Player with session ID ${sessionId} not found`);
+    }
+  }
+
+  // Helper function to find a player by their session ID
+  // function findPlayerBySessionId(sessionId: string) {
+  //   const room = getRoom();
+  //   return Array.from(room?.state.players.values()).find(player => player.sessionId === sessionId);
+  // }
+
+  // Stub functions — replace with your actual UI update logic
+  // function markPlayerAsDisconnected(player: any) {
+  //   console.log(`Player ${player.id} has disconnected`);
+  //   // Add code to update your game's UI
+  // }
+
+  // function markPlayerAsReconnected(player: any) {
+  //   console.log(`Player ${player.id} has reconnected`);
+  //   // Add code to update your game's UI
+  // }
+
+  private displayCards(hand: string[], playerId: string) {
     const room = getRoom();
     if (!room || !room.state || !room.state.players) {
       console.error('No room, room state, or players available');
@@ -232,7 +282,7 @@ export default class Main extends Phaser.Scene {
     this.clearPreviousHands();
 
     // Get the current player and display their cards
-    const currentPlayer = room.state.players.get(currentPlayerId);
+    const currentPlayer = room.state.players.get(playerId);
     if (!currentPlayer) {
       console.error('Current player not found in room state');
       return;
@@ -258,10 +308,10 @@ export default class Main extends Phaser.Scene {
       );
 
       // Add the image to the player's hand array so it can be accessed and modified later
-      if (!this.playerCardImages[currentPlayerId]) {
-        this.playerCardImages[currentPlayerId] = [];
+      if (!this.playerCardImages[playerId]) {
+        this.playerCardImages[playerId] = [];
       }
-      this.playerCardImages[currentPlayerId].push(cardImage);
+      this.playerCardImages[playerId].push(cardImage);
     });
   }
 
