@@ -73,18 +73,6 @@ export default class Main extends Phaser.Scene {
 
     this.displayPlayers(totalPlayers);
 
-    // Handle player disconnect
-    room.onLeave((sessionId) => {
-      console.log(`${sessionId} left the room`);
-      this.handlePlayerDisconnect(sessionId);
-    });
-
-    // Handle player reconnect
-    room.onJoin((sessionId) => {
-      console.log(`${sessionId} joined the room`);
-      this.handlePlayerReconnect(sessionId);
-    });
-
     this.initWelcomeText();
     this.updateLayout();
     this.scale.on('resize', this.handleResize, this);
@@ -130,7 +118,6 @@ export default class Main extends Phaser.Scene {
         console.error('Player data not found for ID:', id);
         return;
       }
-      ``;
 
       const { x, y } = this.calculatePlayerPosition(index, state.players.size);
 
@@ -211,65 +198,6 @@ export default class Main extends Phaser.Scene {
       delete this.playerSprites[playerId];
     }
   }
-
-  handlePlayerDisconnect(sessionId: string) {
-    const room = getRoom();
-    if (!room) {
-      console.error('Room is not available');
-      return;
-    }
-
-    // Find the player using sessionId
-    const player = findPlayerBySessionId(sessionId);
-
-    if (player) {
-      // Mark the player as disconnected in your game's state
-      player.isConnected = false;
-
-      // Update the UI to indicate that the player has disconnected
-      markPlayerAsDisconnected(player);
-    } else {
-      console.warn(`Player with session ID ${sessionId} not found`);
-    }
-  }
-
-  handlePlayerReconnect(sessionId: string) {
-    const room = getRoom();
-    if (!room) {
-      console.error('Room is not available');
-      return;
-    }
-
-    // Find the player using sessionId
-    const player = findPlayerBySessionId(sessionId);
-
-    if (player) {
-      // Mark the player as connected in your game's state
-      player.isConnected = true;
-
-      // Update the UI to indicate that the player has reconnected
-      markPlayerAsReconnected(player);
-    } else {
-      console.warn(`Player with session ID ${sessionId} not found`);
-    }
-  }
-
-  // Helper function to find a player by their session ID
-  // function findPlayerBySessionId(sessionId: string) {
-  //   const room = getRoom();
-  //   return Array.from(room?.state.players.values()).find(player => player.sessionId === sessionId);
-  // }
-
-  // Stub functions — replace with your actual UI update logic
-  // function markPlayerAsDisconnected(player: any) {
-  //   console.log(`Player ${player.id} has disconnected`);
-  //   // Add code to update your game's UI
-  // }
-
-  // function markPlayerAsReconnected(player: any) {
-  //   console.log(`Player ${player.id} has reconnected`);
-  //   // Add code to update your game's UI
-  // }
 
   private displayCards(hand: string[], playerId: string) {
     const room = getRoom();

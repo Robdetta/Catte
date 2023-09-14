@@ -1,8 +1,11 @@
 import Player from './Player';
+import { getRoom, getCurrentPlayerSessionId } from './roomStore';
+import Phaser from 'phaser';
 
-export default class PlayerManager {
-  scene: Phaser.Scene;
-  players: Player[] = [];
+export class PlayerManager {
+  private scene: Phaser.Scene;
+  private players: Player[] = [];
+  private playerSprites: { [key: string]: Phaser.GameObjects.Sprite } = {};
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
