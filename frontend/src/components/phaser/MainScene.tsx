@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import PlayerManager from './helpers/PlayerManager';
+import { PlayerManager } from './helpers/PlayerManager';
 import { getRoom, getCurrentPlayerSessionId } from './helpers/roomStore';
 
 interface Player {
@@ -143,39 +143,6 @@ export default class Main extends Phaser.Scene {
     }
   }
 
-  private clearPlayerCards(playerId: string) {
-    if (this.playerCardImages[playerId]) {
-      this.playerCardImages[playerId].forEach((cardImage) =>
-        cardImage.destroy(),
-      );
-      delete this.playerCardImages[playerId];
-    }
-  }
-
-  private displayCardBacksForPlayer(
-    _playerId: string,
-    playerData: Player,
-    x: number,
-    y: number,
-  ) {
-    if (playerData.hand) {
-      const numberOfCards = playerData.hand.length;
-      const xOffset = 30;
-      const yOffset = -100;
-      const baseX = x - ((numberOfCards - 1) * xOffset) / 2;
-      const baseY = y + yOffset;
-
-      for (let i = 0; i < numberOfCards; i++) {
-        this.add.image(
-          baseX + i * xOffset,
-          baseY,
-          'cards',
-          'card_back_frame_name',
-        );
-      }
-    }
-  }
-
   private addPlayerToUI(player: Player, x: number, y: number) {
     //... (existing logic to add player sprite to UI)
     const sprite = this.add
@@ -197,6 +164,45 @@ export default class Main extends Phaser.Scene {
       this.playerSprites[playerId].destroy();
       delete this.playerSprites[playerId];
     }
+  }
+
+  private calculatePlayerPosition(
+    index: number,
+    totalPlayers: number,
+  ): { x: number; y: number } {
+    const { width, height } = this.cameras.main;
+    const currentPlayerId = this.getCurrentPlayerId();
+    const playersArray = Array.from(
+      getRoom()?.state.players.values(),
+    ) as Player[];
+    const currentPlayerIndex = playersArray.findIndex(
+      (player) => player.id === currentPlayerId,
+    );
+
+    const adjustedIndex =
+      (index - currentPlayerIndex + totalPlayers) % totalPlayers;
+    const isCurrentPlayer = adjustedIndex === 0;
+
+    let x = 0;
+    let y = 0;
+
+    if (isCurrentPlayer) {
+      x = width / 2;
+      y = height - 150;
+    } else {
+      const radius = 300;
+      const angle = Math.PI / 2 + (adjustedIndex / totalPlayers) * 2 * Math.PI;
+
+      x = width / 2 + radius * Math.cos(angle);
+      y = height / 2 + radius * Math.sin(angle);
+    }
+
+    // Update the player's x and y in the state
+    const player = playersArray[index];
+    player.x = x;
+    player.y = y;
+
+    return { x, y };
   }
 
   private displayCards(hand: string[], playerId: string) {
@@ -243,53 +249,37 @@ export default class Main extends Phaser.Scene {
     });
   }
 
-  private clearPreviousHands() {
-    // Loop through all player hands and destroy any existing card images
-    Object.values(this.playerCardImages).forEach((cardImages) => {
-      cardImages.forEach((cardImage) => cardImage.destroy());
-    });
+  private displayCardBacksForPlayer(
+    _playerId: string,
+    playerData: Player,
+    x: number,
+    y: number,
+  ) {
+    if (playerData.hand) {
+      const numberOfCards = playerData.hand.length;
+      const xOffset = 30;
+      const yOffset = -100;
+      const baseX = x - ((numberOfCards - 1) * xOffset) / 2;
+      const baseY = y + yOffset;
 
-    // Reset the playerCardImages object
-    this.playerCardImages = {};
+      for (let i = 0; i < numberOfCards; i++) {
+        this.add.image(
+          baseX + i * xOffset,
+          baseY,
+          'cards',
+          'card_back_frame_name',
+        );
+      }
+    }
   }
 
-  private calculatePlayerPosition(
-    index: number,
-    totalPlayers: number,
-  ): { x: number; y: number } {
-    const { width, height } = this.cameras.main;
-    const currentPlayerId = this.getCurrentPlayerId();
-    const playersArray = Array.from(
-      getRoom()?.state.players.values(),
-    ) as Player[];
-    const currentPlayerIndex = playersArray.findIndex(
-      (player) => player.id === currentPlayerId,
-    );
-
-    const adjustedIndex =
-      (index - currentPlayerIndex + totalPlayers) % totalPlayers;
-    const isCurrentPlayer = adjustedIndex === 0;
-
-    let x = 0;
-    let y = 0;
-
-    if (isCurrentPlayer) {
-      x = width / 2;
-      y = height - 150;
-    } else {
-      const radius = 300;
-      const angle = Math.PI / 2 + (adjustedIndex / totalPlayers) * 2 * Math.PI;
-
-      x = width / 2 + radius * Math.cos(angle);
-      y = height / 2 + radius * Math.sin(angle);
+  private clearPlayerCards(playerId: string) {
+    if (this.playerCardImages[playerId]) {
+      this.playerCardImages[playerId].forEach((cardImage) =>
+        cardImage.destroy(),
+      );
+      delete this.playerCardImages[playerId];
     }
-
-    // Update the player's x and y in the state
-    const player = playersArray[index];
-    player.x = x;
-    player.y = y;
-
-    return { x, y };
   }
 
   private initWelcomeText() {
@@ -318,6 +308,16 @@ export default class Main extends Phaser.Scene {
 
   private setupLandscapeLayout() {
     // Position for Landscape
+  }
+
+  private clearPreviousHands() {
+    // Loop through all player hands and destroy any existing card images
+    Object.values(this.playerCardImages).forEach((cardImages) => {
+      cardImages.forEach((cardImage) => cardImage.destroy());
+    });
+
+    // Reset the playerCardImages object
+    this.playerCardImages = {};
   }
 
   private shuffleDeck(deck: string[]): string[] {

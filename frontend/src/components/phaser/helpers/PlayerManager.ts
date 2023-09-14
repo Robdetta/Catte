@@ -1,6 +1,4 @@
 import Player from './Player';
-import { getRoom, getCurrentPlayerSessionId } from './roomStore';
-import Phaser from 'phaser';
 
 export class PlayerManager {
   private scene: Phaser.Scene;
