@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { PlayerManager } from './helpers/PlayerManager';
-import Player, { IPlayer } from './helpers/Player';
+import Player from './helpers/Player';
 // import { getRoom, getCurrentPlayerSessionId } from './helpers/roomStore';
 
 interface State {
-  players: Map<string, IPlayer>;
+  players: Map<string, Player>;
   // ... other properties
 }
 
