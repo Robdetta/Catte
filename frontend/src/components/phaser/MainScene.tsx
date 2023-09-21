@@ -98,6 +98,8 @@ export default class Main extends Phaser.Scene {
     }
   }
 
+  test;
+
   private initWelcomeText() {
     this.welcomeText = this.add
       .text(
