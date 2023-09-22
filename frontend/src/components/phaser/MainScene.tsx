@@ -11,15 +11,15 @@ interface State {
 export default class Main extends Phaser.Scene {
   private playerManager: PlayerManager;
   private welcomeText: Phaser.GameObjects.Text | null = null;
-  //  private playerSprites: { [key: string]: Phaser.GameObjects.Sprite } = {};
+  private playerSprites: { [key: string]: Phaser.GameObjects.Sprite } = {};
 
   constructor() {
     super({ key: 'MainScene' });
     this.playerManager = new PlayerManager(this);
   }
 
-  // private playerCardImages: { [playerId: string]: Phaser.GameObjects.Image[] } =
-  //   {};
+  private playerCardImages: { [playerId: string]: Phaser.GameObjects.Image[] } =
+    {};
 
   init(data: { numPlayers: number; numBots: number }) {
     this.data.set('numPlayers', data.numPlayers);
@@ -57,8 +57,14 @@ export default class Main extends Phaser.Scene {
 
     const { numPlayers, numBots } = room.state;
     const totalPlayers = numPlayers + numBots;
+    console.log(room.state);
 
-    // this.displayDeck();
+    console.log('Room State:', room.state);
+    console.log('Number of Players:', room.state.numPlayers);
+    console.log('Number of Bots:', room.state.numBots);
+    console.log('Players:', room.state.players);
+
+    //this.displayDeck();
     room.onStateChange(this.updateUI.bind(this));
 
     this.displayPlayers(totalPlayers);
@@ -77,46 +83,67 @@ export default class Main extends Phaser.Scene {
         this.cameras.main,
         this.getCurrentPlayerId.bind(this),
       );
-      console.log(`Displaying player ${player.id} at ${x}, ${y}`);
       this.playerManager.addPlayerToUI(player, x, y);
     });
   }
 
   private updateUI(state: State) {
-    console.log('Updating UI');
-
     const currentPlayerIds = [...state.players.keys()];
+
+    // Existing player IDs in the player manager
     const existingPlayerIds = this.playerManager.players.map(
       (player) => player.id,
     );
 
-    // 1. Remove players who left
-    const leftPlayerIds = existingPlayerIds.filter(
-      (id) => !currentPlayerIds.includes(id),
-    );
-    leftPlayerIds.forEach((id) => {
-      console.log(`Removing player ${id}`);
-      this.playerManager.removePlayerFromUI(id);
-    });
+    // Handling players who left
+    existingPlayerIds
+      .filter((id) => !currentPlayerIds.includes(id))
+      .forEach((id) => {
+        this.playerManager.removePlayerFromUI(id);
+        //this.clearPlayerCards(id); // Assuming you still have a function to clear cards from the UI
+      });
 
-    // 2. Add new players
-    const newPlayerIds = currentPlayerIds.filter(
-      (id) => !existingPlayerIds.includes(id),
-    );
-    newPlayerIds.forEach((id) => {
-      const newPlayerData = state.players.get(id);
-      if (newPlayerData) {
-        console.log(`Adding new player ${id}`);
-        const createdPlayer = this.playerManager.createPlayer(newPlayerData);
-        const { x, y } = this.playerManager.calculatePlayerPosition(
-          currentPlayerIds.indexOf(id),
-          currentPlayerIds.length,
-          this.cameras.main,
-          this.getCurrentPlayerId.bind(this),
-        );
-        this.playerManager.addPlayerToUI(createdPlayer, x, y);
+    currentPlayerIds.forEach((id, index) => {
+      const playerData = state.players.get(id);
+      if (!playerData) {
+        console.error('Player data not found for ID:', id);
+        return;
+      }
+
+      const { x, y } = this.playerManager.calculatePlayerPosition(
+        index,
+        state.players.size,
+        this.cameras.main,
+        this.getCurrentPlayerId.bind(this),
+      );
+
+      let playerInstance = this.playerManager.players.find(
+        (player) => player.id === id,
+      );
+
+      if (!playerInstance) {
+        playerInstance = this.playerManager.createPlayer(playerData);
+      }
+      if (existingPlayerIds.includes(id)) {
+        this.playerManager.updatePlayerPositionInUI(playerInstance, x, y);
+      } else {
+        this.playerManager.addPlayerToUI(playerInstance, x, y);
+        //  this.displayCards(playerData.hand ?? [], id);
+      }
+
+      if (id !== this.getCurrentPlayerId()) {
+        // this.displayCardBacksForPlayer(id, playerData, x, y);
       }
     });
+
+    // Handling the current player's cards
+    const currentPlayerId = this.getCurrentPlayerId();
+    if (currentPlayerId) {
+      const currentPlayer = state.players.get(currentPlayerId);
+      if (currentPlayer?.hand) {
+        //this.displayCards(currentPlayer.hand, currentPlayerId);
+      }
+    }
   }
 
   private initWelcomeText() {

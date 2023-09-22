@@ -18,7 +18,6 @@ export class PlayerManager {
 
   addPlayerToUI(player: Player, x: number, y: number) {
     // Logic to add a player to the UI
-    console.log('Adding player to UI:', { x, y });
     const sprite = this.scene.add
       .sprite(x, y, 'playerAvatar')
       .setTint(player.color)
@@ -27,7 +26,6 @@ export class PlayerManager {
   }
 
   updatePlayerPositionInUI(player: Player, x: number, y: number) {
-    console.log('Updating player position in UI:', { x, y });
     // Logic to update the player's position in the UI
     const sprite = this.playerSprites[player.id];
     if (sprite) {
@@ -45,12 +43,6 @@ export class PlayerManager {
   }
 
   addPlayers(players: Player[]) {
-    // Remove existing players with the same ID
-    this.players = this.players.filter(
-      (existingPlayer) =>
-        !players.some((newPlayer) => newPlayer.id === existingPlayer.id),
-    );
-    // Add new players
     this.players = [...this.players, ...players];
   }
 
@@ -93,6 +85,8 @@ export class PlayerManager {
     player.y = y;
 
     return { x, y };
+    // ... (The same code as you had in MainScene)
+    // Replace `this.cameras.main` with `camera` and `this.getCurrentPlayerId()` with `getCurrentPlayerId()`
   }
 
   // ... other player related methods ...
