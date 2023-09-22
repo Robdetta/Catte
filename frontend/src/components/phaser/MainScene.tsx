@@ -1,14 +1,7 @@
 import Phaser from 'phaser';
+import { Player } from './helpers/Player';
 import { PlayerManager } from './helpers/PlayerManager';
 import { getRoom, getCurrentPlayerSessionId } from './helpers/roomStore';
-
-interface Player {
-  id: string;
-  color: number;
-  x?: number;
-  y?: number;
-  hand?: string[]; // ... other properties
-}
 
 interface State {
   players: Map<string, Player>;
@@ -18,15 +11,15 @@ interface State {
 export default class Main extends Phaser.Scene {
   private playerManager: PlayerManager;
   private welcomeText: Phaser.GameObjects.Text | null = null;
-  private playerSprites: { [key: string]: Phaser.GameObjects.Sprite } = {};
+  //  private playerSprites: { [key: string]: Phaser.GameObjects.Sprite } = {};
 
   constructor() {
     super({ key: 'MainScene' });
     this.playerManager = new PlayerManager(this);
   }
 
-  private playerCardImages: { [playerId: string]: Phaser.GameObjects.Image[] } =
-    {};
+  // private playerCardImages: { [playerId: string]: Phaser.GameObjects.Image[] } =
+  //   {};
 
   init(data: { numPlayers: number; numBots: number }) {
     this.data.set('numPlayers', data.numPlayers);
@@ -59,7 +52,7 @@ export default class Main extends Phaser.Scene {
       return;
     }
 
-    const playersArray = Array.from(room.state.players.values());
+    const playersArray = Array.from(room.state.players.values()) as Player[];
     this.playerManager.addPlayers(playersArray);
 
     const { numPlayers, numBots } = room.state;
@@ -84,65 +77,44 @@ export default class Main extends Phaser.Scene {
         this.cameras.main,
         this.getCurrentPlayerId.bind(this),
       );
+      console.log(`Displaying player ${player.id} at ${x}, ${y}`);
       this.playerManager.addPlayerToUI(player, x, y);
     });
   }
 
   private updateUI(state: State) {
-    // Debug log
     console.log('Updating UI');
 
-    // 1. Collect all the current player IDs in the new state
-    const currentPlayerIds = Array.from(state.players.keys());
-
-    // 2. Remove players that have left the game
-    const playersToRemove = this.playerManager.players.filter(
-      (player) => !currentPlayerIds.includes(player.id),
-    );
-    playersToRemove.forEach((player) => {
-      this.playerManager.removePlayerFromUI(player.id);
-    });
-
-    // 3. Add new players to the game
+    const currentPlayerIds = [...state.players.keys()];
     const existingPlayerIds = this.playerManager.players.map(
       (player) => player.id,
     );
+
+    // 1. Remove players who left
+    const leftPlayerIds = existingPlayerIds.filter(
+      (id) => !currentPlayerIds.includes(id),
+    );
+    leftPlayerIds.forEach((id) => {
+      console.log(`Removing player ${id}`);
+      this.playerManager.removePlayerFromUI(id);
+    });
+
+    // 2. Add new players
     const newPlayerIds = currentPlayerIds.filter(
       (id) => !existingPlayerIds.includes(id),
     );
     newPlayerIds.forEach((id) => {
-      const newPlayer = state.players.get(id);
-      if (newPlayer) {
-        const createdPlayer = this.playerManager.createPlayer(newPlayer);
+      const newPlayerData = state.players.get(id);
+      if (newPlayerData) {
+        console.log(`Adding new player ${id}`);
+        const createdPlayer = this.playerManager.createPlayer(newPlayerData);
         const { x, y } = this.playerManager.calculatePlayerPosition(
-          currentPlayerIds.indexOf(id), // You might want to adjust this index calculation
+          currentPlayerIds.indexOf(id),
           currentPlayerIds.length,
           this.cameras.main,
           this.getCurrentPlayerId.bind(this),
         );
         this.playerManager.addPlayerToUI(createdPlayer, x, y);
-      }
-    });
-
-    // 4. Update existing players
-    currentPlayerIds.forEach((id, index) => {
-      const playerData = state.players.get(id);
-      if (!playerData) {
-        console.error('Player data not found for ID:', id);
-        return;
-      }
-      const { x, y } = this.playerManager.calculatePlayerPosition(
-        index,
-        state.players.size,
-        this.cameras.main,
-        this.getCurrentPlayerId.bind(this),
-      );
-      const existingPlayer = this.playerManager.players.find(
-        (player) => player.id === id,
-      );
-      if (existingPlayer) {
-        Object.assign(existingPlayer, playerData);
-        this.playerManager.updatePlayerPositionInUI(existingPlayer, x, y);
       }
     });
   }
@@ -183,5 +155,6 @@ export default class Main extends Phaser.Scene {
 
   update() {
     // Game loop logic here
+    // Debugging: List all objects in the scene
   }
 }
