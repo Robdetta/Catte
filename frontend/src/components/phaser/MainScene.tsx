@@ -141,7 +141,12 @@ export default class Main extends Phaser.Scene {
     if (currentPlayerId) {
       const currentPlayer = state.players.get(currentPlayerId);
       if (currentPlayer?.hand) {
-        //this.displayCards(currentPlayer.hand, currentPlayerId);
+        const playerInstance = this.playerManager.players.find(
+          (player) => player.id === currentPlayerId,
+        );
+        if (playerInstance) {
+          playerInstance.updateHand(currentPlayer.hand, this);
+        }
       }
     }
   }

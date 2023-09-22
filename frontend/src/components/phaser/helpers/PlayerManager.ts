@@ -85,8 +85,6 @@ export class PlayerManager {
     player.y = y;
 
     return { x, y };
-    // ... (The same code as you had in MainScene)
-    // Replace `this.cameras.main` with `camera` and `this.getCurrentPlayerId()` with `getCurrentPlayerId()`
   }
 
   // ... other player related methods ...

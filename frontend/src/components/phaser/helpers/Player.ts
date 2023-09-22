@@ -9,11 +9,12 @@ export interface PlayerData {
   // ... other properties
 }
 
-export class Player {
+export class Player implements PlayerData {
   public id: string;
   public color: number;
   public avatar: Phaser.GameObjects.Image;
-  public hand: Phaser.GameObjects.Image[] = [];
+  public hand?: string[]; // Server representation
+  public handImages: Phaser.GameObjects.Image[] = [];
   x: number | undefined;
   y: number | undefined;
 
@@ -21,14 +22,11 @@ export class Player {
     this.id = data.id;
     this.color = data.color;
     this.avatar = scene.add.image(data.x ?? 0, data.y ?? 0, 'playerAvatar');
-    // You can also change the avatar's tint to match the player's color
     this.avatar.setTint(this.color);
 
-    // Initialize hand if data.hand is provided
     if (data.hand) {
-      this.hand = data.hand.map((cardId) => {
-        // Add logic to create card images here
-        // For now, returning placeholders
+      this.hand = data.hand;
+      this.handImages = this.hand.map((cardId) => {
         return scene.add.image(0, 0, cardId);
       });
     }
@@ -40,5 +38,17 @@ export class Player {
     this.avatar.y = y;
   }
 
-  // ... Add other methods to update additional properties like hand
+  // Method to update hand
+  updateHand(newHand: string[], scene: Phaser.Scene) {
+    // Remove old hand images
+    this.handImages.forEach((image) => image.destroy());
+
+    // Update the hand data
+    this.hand = newHand;
+
+    // Create new hand images
+    this.handImages = newHand.map((cardId) => {
+      return scene.add.image(0, 0, cardId);
+    });
+  }
 }
