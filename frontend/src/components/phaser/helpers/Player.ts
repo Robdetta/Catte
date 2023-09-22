@@ -1,39 +1,44 @@
 import Phaser from 'phaser';
 
-export interface IPlayer {
+export interface PlayerData {
   id: string;
   color: number;
   x?: number;
   y?: number;
   hand?: string[];
-  avatar?: Phaser.GameObjects.Image;
+  // ... other properties
 }
 
-export default class Player implements IPlayer {
+export class Player {
   public id: string;
   public color: number;
-  public x?: number;
-  public y?: number;
-  public hand?: string[];
   public avatar: Phaser.GameObjects.Image;
+  public hand: Phaser.GameObjects.Image[] = [];
+  x: number | undefined;
+  y: number | undefined;
 
-  constructor(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-    id: string,
-    color: number,
-  ) {
-    this.x = x;
-    this.y = y;
-    this.id = id;
-    this.color = color;
-    this.avatar = scene.add.image(x, y, 'playerAvatar').setTint(color);
+  constructor(scene: Phaser.Scene, data: PlayerData) {
+    this.id = data.id;
+    this.color = data.color;
+    this.avatar = scene.add.image(data.x ?? 0, data.y ?? 0, 'playerAvatar');
+    // You can also change the avatar's tint to match the player's color
+    this.avatar.setTint(this.color);
+
+    // Initialize hand if data.hand is provided
+    if (data.hand) {
+      this.hand = data.hand.map((cardId) => {
+        // Add logic to create card images here
+        // For now, returning placeholders
+        return scene.add.image(0, 0, cardId);
+      });
+    }
   }
 
-  public setPosition(x: number, y: number): void {
-    this.x = x;
-    this.y = y;
-    this.avatar.setPosition(x, y);
+  // Add a method to update player position
+  updatePosition(x: number, y: number) {
+    this.avatar.x = x;
+    this.avatar.y = y;
   }
+
+  // ... Add other methods to update additional properties like hand
 }

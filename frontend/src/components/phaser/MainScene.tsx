@@ -1,7 +1,14 @@
 import Phaser from 'phaser';
 import { PlayerManager } from './helpers/PlayerManager';
-import Player from './helpers/Player';
-// import { getRoom, getCurrentPlayerSessionId } from './helpers/roomStore';
+import { getRoom, getCurrentPlayerSessionId } from './helpers/roomStore';
+
+interface Player {
+  id: string;
+  color: number;
+  x?: number;
+  y?: number;
+  hand?: string[]; // ... other properties
+}
 
 interface State {
   players: Map<string, Player>;
@@ -31,74 +38,114 @@ export default class Main extends Phaser.Scene {
     this.load.image('playerAvatar', 'path_to_player_avatar_image.png');
   }
 
-  create() {
-    this.playerManager.displayPlayers();
+  private getCurrentPlayerId(): string | null {
+    return getCurrentPlayerSessionId();
+  }
 
+  create() {
+    const room = getRoom();
+    console.log('Fetched Room:', room);
+    if (!room) {
+      console.error('No room data available');
+      return;
+    }
+
+    if (
+      !room.state ||
+      room.state.numPlayers === undefined ||
+      room.state.numBots === undefined
+    ) {
+      console.error('State properties missing.');
+      return;
+    }
+
+    const playersArray = Array.from(room.state.players.values());
+    this.playerManager.addPlayers(playersArray);
+
+    const { numPlayers, numBots } = room.state;
+    const totalPlayers = numPlayers + numBots;
+
+    // this.displayDeck();
+    room.onStateChange(this.updateUI.bind(this));
+
+    this.displayPlayers(totalPlayers);
+
+    this.initWelcomeText();
+    this.updateLayout();
     this.scale.on('resize', this.handleResize, this);
   }
 
-  private displayDeck() {
-    const x = this.cameras.main.centerX;
-    const y = this.cameras.main.centerY - 100;
-    for (let i = 0; i < 52; i++) {
-      this.add.image(x, y - i * 0.5, 'cards', 'back').setDepth(i);
-    }
+  private displayPlayers(totalPlayers: number) {
+    const playersArray = this.playerManager.players;
+    playersArray.forEach((player, index) => {
+      const { x, y } = this.playerManager.calculatePlayerPosition(
+        index,
+        totalPlayers,
+        this.cameras.main,
+        this.getCurrentPlayerId.bind(this),
+      );
+      this.playerManager.addPlayerToUI(player, x, y);
+    });
   }
 
   private updateUI(state: State) {
-    const currentPlayerIds = [...state.players.keys()];
-    const existingPlayerIds = Object.keys(this.playerSprites);
+    // Debug log
+    console.log('Updating UI');
 
-    // Handling players who left
-    existingPlayerIds
-      .filter((id) => !currentPlayerIds.includes(id))
-      .forEach((id) => {
-        this.playerManager.removePlayerFromUI(id);
-        this.clearPlayerCards(id);
-      });
+    // 1. Collect all the current player IDs in the new state
+    const currentPlayerIds = Array.from(state.players.keys());
 
-    // Handling current players (both existing and new)
+    // 2. Remove players that have left the game
+    const playersToRemove = this.playerManager.players.filter(
+      (player) => !currentPlayerIds.includes(player.id),
+    );
+    playersToRemove.forEach((player) => {
+      this.playerManager.removePlayerFromUI(player.id);
+    });
+
+    // 3. Add new players to the game
+    const existingPlayerIds = this.playerManager.players.map(
+      (player) => player.id,
+    );
+    const newPlayerIds = currentPlayerIds.filter(
+      (id) => !existingPlayerIds.includes(id),
+    );
+    newPlayerIds.forEach((id) => {
+      const newPlayer = state.players.get(id);
+      if (newPlayer) {
+        const createdPlayer = this.playerManager.createPlayer(newPlayer);
+        const { x, y } = this.playerManager.calculatePlayerPosition(
+          currentPlayerIds.indexOf(id), // You might want to adjust this index calculation
+          currentPlayerIds.length,
+          this.cameras.main,
+          this.getCurrentPlayerId.bind(this),
+        );
+        this.playerManager.addPlayerToUI(createdPlayer, x, y);
+      }
+    });
+
+    // 4. Update existing players
     currentPlayerIds.forEach((id, index) => {
       const playerData = state.players.get(id);
       if (!playerData) {
         console.error('Player data not found for ID:', id);
         return;
       }
-
       const { x, y } = this.playerManager.calculatePlayerPosition(
         index,
         state.players.size,
+        this.cameras.main,
+        this.getCurrentPlayerId.bind(this),
       );
-
-      // Create a new Player instance from playerData before calling updatePlayer
-      const player = new Player(
-        this.scene,
-        x,
-        y,
-        playerData.id,
-        playerData.color,
+      const existingPlayer = this.playerManager.players.find(
+        (player) => player.id === id,
       );
-      player.hand = playerData.hand;
-      player.avatar = playerData.avatar;
-
-      this.playerManager.updatePlayer(player, x, y);
-
-      if (id !== this.getCurrentPlayerId()) {
-        this.displayCardBacksForPlayer(id, playerData, x, y);
+      if (existingPlayer) {
+        Object.assign(existingPlayer, playerData);
+        this.playerManager.updatePlayerPositionInUI(existingPlayer, x, y);
       }
     });
-
-    // Handling the current player's cards
-    const currentPlayerId = this.getCurrentPlayerId();
-    if (currentPlayerId) {
-      const currentPlayer = state.players.get(currentPlayerId);
-      if (currentPlayer?.hand) {
-        this.displayCards(currentPlayer.hand, currentPlayerId);
-      }
-    }
   }
-
-  test;
 
   private initWelcomeText() {
     this.welcomeText = this.add
