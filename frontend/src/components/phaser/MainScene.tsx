@@ -145,7 +145,16 @@ export default class Main extends Phaser.Scene {
           (player) => player.id === currentPlayerId,
         );
         if (playerInstance) {
-          playerInstance.updateHand(currentPlayer.hand, this);
+          if (typeof playerInstance.updateHand === 'function') {
+            playerInstance.updateHand(currentPlayer.hand);
+          } else {
+            console.error(
+              'updateHand is not a function on playerInstance',
+              playerInstance,
+            );
+          }
+        } else {
+          console.error('playerInstance is null or undefined');
         }
       }
     }

@@ -25,10 +25,7 @@ export class Player implements PlayerData {
     this.avatar.setTint(this.color);
 
     if (data.hand) {
-      this.hand = data.hand;
-      this.handImages = this.hand.map((cardId) => {
-        return scene.add.image(0, 0, cardId);
-      });
+      this.updateHand(data.hand, scene);
     }
   }
 
@@ -38,17 +35,21 @@ export class Player implements PlayerData {
     this.avatar.y = y;
   }
 
-  // Method to update hand
   updateHand(newHand: string[], scene: Phaser.Scene) {
-    // Remove old hand images
-    this.handImages.forEach((image) => image.destroy());
-
-    // Update the hand data
     this.hand = newHand;
 
+    // Remove old hand images from the scene
+    this.handImages.forEach((image) => image.destroy());
+
     // Create new hand images
-    this.handImages = newHand.map((cardId) => {
-      return scene.add.image(0, 0, cardId);
+    this.handImages = this.hand.map((cardId, index) => {
+      const x = this.avatar.x + index * 30; // Adjust x and y as needed
+      const y = this.avatar.y + 50; // Position below the avatar
+      return scene.add.image(x, y, 'cardSprites', cardId);
     });
+  }
+
+  renderHand(scene: Phaser.Scene) {
+    // ... UI logic to display the hand
   }
 }

@@ -61,7 +61,7 @@ export class CardGameRoom extends Room<MyRoomState> {
     }
 
     // For demonstration purposes, let's deal 5 cards to each player upon room creation
-    dealCards(players, 5);
+    dealCards(players, 6);
 
     this.onMessage('type', (client, message) => {
       // handle "type" message
