@@ -3,7 +3,7 @@ import { getRoom } from './roomStore';
 
 export class PlayerManager {
   private scene: Phaser.Scene;
-  public players: Player[] = [];
+  players: Player[] = [];
   private playerSprites: { [key: string]: Phaser.GameObjects.Sprite } = {};
 
   constructor(scene: Phaser.Scene) {
