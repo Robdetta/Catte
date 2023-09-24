@@ -3,8 +3,8 @@ import { getRoom } from './roomStore';
 
 export class PlayerManager {
   private scene: Phaser.Scene;
-  players: Player[] = [];
-  private playerSprites: { [key: string]: Phaser.GameObjects.Sprite } = {};
+  players: Map<string, { player: Player; sprite: Phaser.GameObjects.Sprite }> =
+    new Map();
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -12,38 +12,45 @@ export class PlayerManager {
 
   createPlayer(data: PlayerData): Player {
     const player = new Player(this.scene, data);
-    this.players.push(player);
     return player;
   }
 
+  // Method to fetch a player and its sprite using the player ID
+  getPlayerWithSprite(id: string) {
+    return this.players.get(id);
+  }
+
+  addPlayerWithSprite(player: Player, sprite: Phaser.GameObjects.Sprite) {
+    this.players.set(player.id, { player, sprite });
+  }
+
   addPlayerToUI(player: Player, x: number, y: number) {
-    // Logic to add a player to the UI
     const sprite = this.scene.add
       .sprite(x, y, 'playerAvatar')
       .setTint(player.color)
       .setDepth(1);
-    this.playerSprites[player.id] = sprite;
+    this.addPlayerWithSprite(player, sprite);
   }
 
   updatePlayerPositionInUI(player: Player, x: number, y: number) {
-    // Logic to update the player's position in the UI
-    const sprite = this.playerSprites[player.id];
+    const sprite = this.players.get(player.id)?.sprite;
     if (sprite) {
       sprite.setPosition(x, y);
     }
   }
 
   removePlayerFromUI(playerId: string) {
-    // Logic to remove a player from the UI
-    if (this.playerSprites[playerId]) {
-      this.playerSprites[playerId].destroy();
-      delete this.playerSprites[playerId];
+    const sprite = this.players.get(playerId)?.sprite;
+    if (sprite) {
+      sprite.destroy();
     }
-    this.players = this.players.filter((player) => player.id !== playerId);
+    this.players.delete(playerId);
   }
 
   addPlayers(players: Player[]) {
-    this.players = [...this.players, ...players];
+    for (const player of players) {
+      this.players.set(player.id, { player, sprite: null });
+    }
   }
 
   calculatePlayerPosition(

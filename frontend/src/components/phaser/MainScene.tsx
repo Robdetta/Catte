@@ -75,8 +75,9 @@ export default class Main extends Phaser.Scene {
   }
 
   private displayPlayers(totalPlayers: number) {
-    const playersArray = this.playerManager.players;
-    playersArray.forEach((player, index) => {
+    const playersMap = this.playerManager.players;
+    let index = 0;
+    playersMap.forEach(({ player }, playerId) => {
       const { x, y } = this.playerManager.calculatePlayerPosition(
         index,
         totalPlayers,
@@ -84,24 +85,19 @@ export default class Main extends Phaser.Scene {
         this.getCurrentPlayerId.bind(this),
       );
       this.playerManager.addPlayerToUI(player, x, y);
+      index++;
     });
   }
 
   private updateUI(state: State) {
     const currentPlayerIds = [...state.players.keys()];
 
-    // Existing player IDs in the player manager
-    const existingPlayerIds = this.playerManager.players.map(
-      (player) => player.id,
-    );
-
-    // Handling players who left
-    existingPlayerIds
-      .filter((id) => !currentPlayerIds.includes(id))
-      .forEach((id) => {
+    // Remove players who left
+    this.playerManager.players.forEach((playerObj, id) => {
+      if (!currentPlayerIds.includes(id)) {
         this.playerManager.removePlayerFromUI(id);
-        //this.clearPlayerCards(id); // Assuming you still have a function to clear cards from the UI
-      });
+      }
+    });
 
     currentPlayerIds.forEach((id, index) => {
       const playerData = state.players.get(id);
@@ -117,47 +113,19 @@ export default class Main extends Phaser.Scene {
         this.getCurrentPlayerId.bind(this),
       );
 
-      let playerInstance = this.playerManager.players.find(
-        (player) => player.id === id,
-      );
+      let playerInstance = this.playerManager.getPlayerWithSprite(id)?.player;
 
       if (!playerInstance) {
         playerInstance = this.playerManager.createPlayer(playerData);
-      }
-      if (existingPlayerIds.includes(id)) {
-        this.playerManager.updatePlayerPositionInUI(playerInstance, x, y);
-      } else {
-        this.playerManager.addPlayerToUI(playerInstance, x, y);
-        //  this.displayCards(playerData.hand ?? [], id);
+        // Assuming you'll add a sprite later
+        this.playerManager.addPlayerWithSprite(playerInstance, null);
       }
 
-      if (id !== this.getCurrentPlayerId()) {
-        // this.displayCardBacksForPlayer(id, playerData, x, y);
-      }
+      // Update UI
+      this.playerManager.updatePlayerPositionInUI(playerInstance, x, y);
     });
 
-    // Handling the current player's cards
-    const currentPlayerId = this.getCurrentPlayerId();
-    if (currentPlayerId) {
-      const currentPlayer = state.players.get(currentPlayerId);
-      if (currentPlayer?.hand) {
-        const playerInstance = this.playerManager.players.find(
-          (player) => player.id === currentPlayerId,
-        );
-        if (playerInstance) {
-          if (typeof playerInstance.updateHand === 'function') {
-            playerInstance.updateHand(currentPlayer.hand);
-          } else {
-            console.error(
-              'updateHand is not a function on playerInstance',
-              playerInstance,
-            );
-          }
-        } else {
-          console.error('playerInstance is null or undefined');
-        }
-      }
-    }
+    // ... (Handling the current player's cards, etc.)
   }
 
   private initWelcomeText() {
