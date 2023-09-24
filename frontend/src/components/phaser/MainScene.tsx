@@ -129,18 +129,26 @@ export default class Main extends Phaser.Scene {
 
       // Update UI
       this.playerManager.updatePlayerPositionInUI(playerInstance, x, y);
-    });
 
-    // ... (Handling the current player's cards, etc.)
-    // Display the current player's cards
-    if (currentPlayer && currentPlayer.hand) {
-      this.cardUtils.displayCards(
-        currentPlayer.hand,
-        currentPlayerId,
-        this.addImageToScene.bind(this), // Use a helper function
-        currentPlayer,
-      );
-    }
+      // Moved this inside the forEach loop
+      if (id === currentPlayerId && currentPlayer && currentPlayer.hand) {
+        this.cardUtils.displayCards(
+          currentPlayer.hand,
+          currentPlayerId,
+          this.addImageToScene.bind(this),
+          currentPlayer,
+        );
+      } else {
+        // Otherwise, display card backs for this player
+        this.cardUtils.displayCardBacksForPlayer(
+          id,
+          playerData,
+          x, // these are the actual x and y coordinates where you want to display
+          y, // the card backs for this player.
+          this.addImageToScene.bind(this),
+        );
+      }
+    });
   }
 
   private addImageToScene(
