@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { Player } from './helpers/Player';
 import { PlayerManager } from './helpers/PlayerManager';
 import { getRoom, getCurrentPlayerSessionId } from './helpers/roomStore';
+import CardUtils from './helpers/CardUtils';
 
 interface State {
   players: Map<string, Player>;
@@ -12,14 +13,15 @@ export default class Main extends Phaser.Scene {
   private playerManager: PlayerManager;
   private welcomeText: Phaser.GameObjects.Text | null = null;
   private playerSprites: { [key: string]: Phaser.GameObjects.Sprite } = {};
+  private cardUtils: CardUtils;
+  private playerCardImages: { [playerId: string]: Phaser.GameObjects.Image[] } =
+    {};
 
   constructor() {
     super({ key: 'MainScene' });
     this.playerManager = new PlayerManager(this);
+    this.cardUtils = new CardUtils();
   }
-
-  private playerCardImages: { [playerId: string]: Phaser.GameObjects.Image[] } =
-    {};
 
   init(data: { numPlayers: number; numBots: number }) {
     this.data.set('numPlayers', data.numPlayers);
@@ -91,6 +93,7 @@ export default class Main extends Phaser.Scene {
 
   private updateUI(state: State) {
     const currentPlayerIds = [...state.players.keys()];
+    const currentPlayerId = this.getCurrentPlayerId();
 
     // Remove players who left
     this.playerManager.players.forEach((playerObj, id) => {
@@ -126,6 +129,13 @@ export default class Main extends Phaser.Scene {
     });
 
     // ... (Handling the current player's cards, etc.)
+    // Display the current player's cards
+    if (currentPlayerId && state.players.has(currentPlayerId)) {
+      const currentPlayer = state.players.get(currentPlayerId)!;
+      if (currentPlayer.hand) {
+        this.cardUtils.displayCards(currentPlayer.hand, currentPlayerId);
+      }
+    }
   }
 
   private initWelcomeText() {
@@ -142,6 +152,24 @@ export default class Main extends Phaser.Scene {
       .setOrigin(0.5);
   }
 
+  clearPlayerCards(playerId: string) {
+    if (this.playerCardImages[playerId]) {
+      this.playerCardImages[playerId].forEach((cardImage) =>
+        cardImage.destroy(),
+      );
+      delete this.playerCardImages[playerId];
+    }
+  }
+
+  clearPreviousHands() {
+    // Loop through all player hands and destroy any existing card images
+    Object.values(this.playerCardImages).forEach((cardImages) => {
+      cardImages.forEach((cardImage) => cardImage.destroy());
+    });
+
+    // Reset the playerCardImages object
+    this.playerCardImages = {};
+  }
   private updateLayout() {
     const { width, height } = this.cameras.main;
     if (height > width) this.setupPortraitLayout();
