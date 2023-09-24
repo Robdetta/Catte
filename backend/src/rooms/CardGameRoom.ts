@@ -62,20 +62,6 @@ export class CardGameRoom extends Room<MyRoomState> {
 
     // For demonstration purposes, let's deal 5 cards to each player upon room creation
     dealCards(players, 6);
-
-    this.onMessage('type', (client, message) => {
-      // handle "type" message
-      // Example: if a player decides to draw a card, handle that action here
-      if (message.type === 'drawCard') {
-        const player = players.find((p) => p.id === client.sessionId); // Get the corresponding player using client.sessionId or another unique identifier
-        if (player) {
-          player.drawCard(drawCardFromPile());
-          // Then, broadcast the updated state to all clients
-          this.sendNotification(`Player ${client.sessionId} drew a card.`);
-        }
-      }
-      // Handle other game actions similarly
-    });
   }
 
   onJoin(client: Client, options: any) {
@@ -148,6 +134,12 @@ export class CardGameRoom extends Room<MyRoomState> {
         players.map((player) => [player.id, player.hand]),
       ),
     });
+    console.log('Cards dealt to players:', playersArray);
+    // ... inside the startGame function
+    console.log(
+      'Hands after dealing: ',
+      Array.from(this.state.players.values()).map((p) => p.hand),
+    );
   }
 
   private checkIfAllPlayersReady() {

@@ -1,4 +1,4 @@
-import { Client } from 'colyseus.js';
+import { Client, Room } from 'colyseus.js';
 import { setRoom } from '../components/phaser/helpers/roomStore';
 
 const client = new Client('ws://localhost:2567');
@@ -24,6 +24,7 @@ export const createRoom = async (
 
     // Store the room instance
     setRoom(room);
+    initializeRoomEvents(room);
 
     // Fetch the gameKey from the server
     const response = await fetch(
@@ -53,6 +54,7 @@ export const joinRoom = async (
 
     // Store the room instance
     setRoom(room);
+    initializeRoomEvents(room);
 
     if (room) {
       return { gameKey: roomKey, sessionId: room.sessionId };
@@ -66,4 +68,18 @@ export const joinRoom = async (
     console.error('Error joining room:', error);
     throw error; // rethrow the error to be caught by caller
   }
+};
+
+export const initializeRoomEvents = (room: Room) => {
+  room.onStateChange((newState) => {
+    // Here, newState will have all the information about the room's state.
+    // You can now update your frontend UI based on the new state.
+
+    // For example, if your state has a 'players' map:
+    newState.players.forEach((player: { hand: any }, playerId: any) => {
+      const hand = player.hand;
+      // Call your method to display cards here.
+      // this.displayCards(hand, playerId);
+    });
+  });
 };
