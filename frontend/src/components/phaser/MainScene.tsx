@@ -95,6 +95,9 @@ export default class Main extends Phaser.Scene {
     const currentPlayerIds = [...state.players.keys()];
     const currentPlayerId = this.getCurrentPlayerId();
 
+    const currentPlayer = state.players.get(currentPlayerId)!;
+    console.log('Current Player in updateUI:', currentPlayer);
+
     // Remove players who left
     this.playerManager.players.forEach((playerObj, id) => {
       if (!currentPlayerIds.includes(id)) {
@@ -130,12 +133,24 @@ export default class Main extends Phaser.Scene {
 
     // ... (Handling the current player's cards, etc.)
     // Display the current player's cards
-    if (currentPlayerId && state.players.has(currentPlayerId)) {
-      const currentPlayer = state.players.get(currentPlayerId)!;
-      if (currentPlayer.hand) {
-        this.cardUtils.displayCards(currentPlayer.hand, currentPlayerId);
-      }
+    if (currentPlayer && currentPlayer.hand) {
+      this.cardUtils.displayCards(
+        currentPlayer.hand,
+        currentPlayerId,
+        this.addImageToScene.bind(this), // Use a helper function
+        currentPlayer,
+      );
     }
+  }
+
+  private addImageToScene(
+    x: number,
+    y: number,
+    key: string,
+    frame: string | number,
+  ) {
+    // this.add.image is Phaser's method to add an image to the scene.
+    this.add.image(x, y, key, frame);
   }
 
   private initWelcomeText() {
