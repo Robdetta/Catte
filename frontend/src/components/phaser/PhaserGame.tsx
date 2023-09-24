@@ -7,6 +7,7 @@ interface PhaserGameProps {
   numPlayers: number;
   numBots: number;
   room: any; // Update the type of room if you have a specific type for it
+  playerHand: string[];
 }
 
 const PhaserGame: React.FC<PhaserGameProps> = ({

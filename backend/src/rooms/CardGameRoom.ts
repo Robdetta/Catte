@@ -124,22 +124,33 @@ export class CardGameRoom extends Room<MyRoomState> {
       playersArray[i].hand = deck.splice(0, 6); // Assign 6 cards to the current player
     }
 
+    const randomIndex = Math.floor(Math.random() * playersArray.length);
+    const startingPlayerId = playersArray[randomIndex].id;
+    this.state.currentTurnPlayerId = startingPlayerId;
+
     //set the first player's turn
     this.handleTurnLogic();
 
     // Notify clients that the game has started and send them their initial hands
     this.broadcast('gameStart', {
       message: 'The game has started!',
-      hands: Object.fromEntries(
-        players.map((player) => [player.id, player.hand]),
-      ),
+      hands: this.serializeHands(),
     });
+
     console.log('Cards dealt to players:', playersArray);
     // ... inside the startGame function
     console.log(
       'Hands after dealing: ',
       Array.from(this.state.players.values()).map((p) => p.hand),
     );
+  }
+
+  serializeHands(): Record<string, any[]> {
+    const serializedHands: Record<string, any[]> = {};
+    for (const [playerId, player] of this.state.players) {
+      serializedHands[playerId] = Array.from(player.hand.values()); // Assuming hand is a Set or Array
+    }
+    return serializedHands;
   }
 
   private checkIfAllPlayersReady() {
@@ -155,8 +166,12 @@ export class CardGameRoom extends Room<MyRoomState> {
 
   handleTurnLogic() {
     //... existing logic
+    console.log(
+      'Current turn player ID on server:',
+      this.state.currentTurnPlayerId,
+    );
     this.broadcast('turnChange', {
-      newTturnPlayerId: this.state.currentTurnPlayerId,
+      newTurnPlayerId: this.state.currentTurnPlayerId,
     });
   }
 

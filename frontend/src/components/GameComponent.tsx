@@ -12,6 +12,7 @@ function GameComponent() {
   console.log('ParentComponent rendered');
 
   const [notification, setNotification] = useState<string | null>(null);
+  const [playerHand, setPlayerHand] = useState<string[]>([]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(
@@ -35,17 +36,23 @@ function GameComponent() {
       setTimeout(() => setNotification(null), 5000);
     };
 
-    const handleGameStart = (message: { message: string }) => {
-      console.log(message);
+    const handleGameStart = (message: { message: string; hands: any }) => {
+      console.log('Game started with hands:', message.hands);
+      if (sessionId) {
+        const hand = message.hands[sessionId];
+        if (hand) {
+          setPlayerHand(hand);
+        }
+      }
     };
-
     const handleTurnChange = (message: { newTurnPlayerId: string }) => {
+      console.log('Entire new turn message:', message);
       console.log('New player turn:', message.newTurnPlayerId);
     };
 
     room.onMessage('notification', handleNotification);
     room.onMessage('gameStart', handleGameStart);
-    room.onMessage('turnChange', handleTurnChange);
+    room.onMessage('turnChange', handleTurnChange); // Use handleTurnChange here
 
     // Cleanup listeners on component unmount
     return () => {
@@ -53,7 +60,7 @@ function GameComponent() {
       // room.onMessage('gameStart', handleGameStart);
       // room.onMessage('turnChange', handleTurnChange);
     };
-  }, [room]);
+  }, [room, sessionId]);
 
   // Rest of your component logic...
   return (
@@ -62,7 +69,12 @@ function GameComponent() {
       <p>Session ID: {sessionId}</p> */}
       <Notification room={room} />
       {/* Your Phaser or other game logic/rendering can go here */}
-      <PhaserGame />
+      <PhaserGame
+        playerHand={playerHand}
+        numPlayers={0}
+        numBots={0}
+        room={undefined}
+      />
       <button
         onClick={() => {
           if (room) {
