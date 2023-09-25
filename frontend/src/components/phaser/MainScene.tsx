@@ -142,8 +142,10 @@ export default class Main extends Phaser.Scene {
       }
 
       // Update UI
-      this.playerManager.updatePlayerPositionInUI(playerInstance, x, y);
-
+      this.playerManager.updatePlayerPositions(
+        state,
+        this.getCurrentPlayerId.bind(this),
+      );
       // Moved this inside the forEach loop
       if (id === currentPlayerId && currentPlayer && currentPlayer.hand) {
         this.cardUtils.displayCards(

@@ -1,5 +1,5 @@
 import { Player, PlayerData } from '../../../models/Player';
-import { getRoom } from '../../../stores/roomStore';
+import { getRoom, getCurrentPlayerSessionId } from '../../../stores/roomStore';
 
 export class PlayerManager {
   private scene: Phaser.Scene;
@@ -89,7 +89,9 @@ export class PlayerManager {
 
   // Update the layout of all players in the UI
   updatePlayerPositions(state: any) {
+    const currentPlayerId = getCurrentPlayerSessionId();
     const currentPlayerIds = [...state.players.keys()];
+
     currentPlayerIds.forEach((id, index) => {
       const playerData = state.players.get(id);
       if (!playerData) {
@@ -101,8 +103,7 @@ export class PlayerManager {
         index,
         state.players.size,
         this.scene.cameras.main,
-        // Replace this with however you get the current player ID
-        () => 'currentPlayerID',
+        currentPlayerId,
       );
 
       let playerInstance = this.getPlayerWithSprite(id)?.player;
@@ -121,7 +122,7 @@ export class PlayerManager {
     index: number,
     totalPlayers: number,
     camera: Phaser.Cameras.Scene2D.Camera,
-    getCurrentPlayerId: () => string | null,
+    currentPlayerId: string | null,
   ): { x: number; y: number } {
     const { width, height } = camera;
     const currentPlayerId = getCurrentPlayerId();
