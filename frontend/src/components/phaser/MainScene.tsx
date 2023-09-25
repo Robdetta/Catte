@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
-import { Player } from './helpers/Player';
+import { Player } from '../../models/Player';
 import { PlayerManager } from './helpers/PlayerManager';
-import { getRoom, getCurrentPlayerSessionId } from './helpers/roomStore';
-import CardUtils from './helpers/CardUtils';
+import { getRoom, getCurrentPlayerSessionId } from '../../stores/roomStore';
+import CardUtils from '../../utils/CardUtils';
 
 interface State {
   players: Map<string, Player>;

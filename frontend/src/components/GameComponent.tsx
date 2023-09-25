@@ -1,7 +1,7 @@
 import { useParams, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import PhaserGame from './phaser/PhaserGame';
-import { getRoom } from './phaser/helpers/roomStore';
+import { getRoom } from '../stores/roomStore';
 import Notification from './notification/notification';
 
 function GameComponent() {

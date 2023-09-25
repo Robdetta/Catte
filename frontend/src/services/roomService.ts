@@ -1,5 +1,5 @@
 import { Client, Room } from 'colyseus.js';
-import { setRoom } from '../components/phaser/helpers/roomStore';
+import { setRoom } from '../stores/roomStore';
 
 const client = new Client('ws://localhost:2567');
 

@@ -1,5 +1,5 @@
-import { Player, PlayerData } from './Player';
-import { getRoom } from './roomStore';
+import { Player, PlayerData } from '../../../models/Player';
+import { getRoom } from '../../../stores/roomStore';
 
 export class PlayerManager {
   private scene: Phaser.Scene;
