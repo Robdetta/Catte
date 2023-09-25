@@ -103,6 +103,9 @@ export default class Main extends Phaser.Scene {
       return;
     }
 
+    console.log('Pre-remove player state:', [
+      ...this.playerManager.players.keys(),
+    ]);
     // Remove players who left
     this.playerManager.players.forEach((playerObj, id) => {
       if (!currentPlayerIds.includes(id)) {
@@ -111,6 +114,10 @@ export default class Main extends Phaser.Scene {
         this.clearPlayerCards(id); // Assuming you have a method to clear player cards from the UI
       }
     });
+
+    console.log('Post-remove player state:', [
+      ...this.playerManager.players.keys(),
+    ]);
 
     currentPlayerIds.forEach((id, index) => {
       const playerData = state.players.get(id);

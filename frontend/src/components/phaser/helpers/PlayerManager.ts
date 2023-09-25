@@ -29,13 +29,17 @@ export class PlayerManager {
 
   addPlayerToUI(player: Player, x: number, y: number) {
     let sprite = this.players.get(player.id)?.sprite;
+
     if (!sprite) {
       sprite = this.scene.add
         .sprite(x, y, 'playerAvatar')
         .setTint(player.color)
         .setDepth(1);
+
+      console.log('New sprite created for player with ID:', player.id);
       this.addPlayerWithSprite(player, sprite);
     } else {
+      console.log('Using existing sprite for player with ID:', player.id);
       sprite.setPosition(x, y);
     }
   }
@@ -50,16 +54,22 @@ export class PlayerManager {
   removePlayerFromUI(playerId: string) {
     console.log('Attempting to remove player with ID:', playerId);
     const sprite = this.players.get(playerId)?.sprite;
+
     if (sprite) {
       console.log('Sprite found. Destroying sprite.');
       sprite.destroy();
     } else {
-      console.log('No sprite found for this player.');
+      console.log(
+        'No sprite found for this player. Players state:',
+        this.players,
+      );
     }
     this.players.delete(playerId);
 
     // Also clear cards for this player
     this.clearPlayerCards(playerId);
+
+    console.log('Current players after removal:', [...this.players.keys()]);
   }
 
   // New method to clear player cards
