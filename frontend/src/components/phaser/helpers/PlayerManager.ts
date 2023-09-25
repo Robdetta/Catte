@@ -28,11 +28,16 @@ export class PlayerManager {
   }
 
   addPlayerToUI(player: Player, x: number, y: number) {
-    const sprite = this.scene.add
-      .sprite(x, y, 'playerAvatar')
-      .setTint(player.color)
-      .setDepth(1);
-    this.addPlayerWithSprite(player, sprite);
+    let sprite = this.players.get(player.id)?.sprite;
+    if (!sprite) {
+      sprite = this.scene.add
+        .sprite(x, y, 'playerAvatar')
+        .setTint(player.color)
+        .setDepth(1);
+      this.addPlayerWithSprite(player, sprite);
+    } else {
+      sprite.setPosition(x, y);
+    }
   }
 
   updatePlayerPositionInUI(player: Player, x: number, y: number) {
@@ -43,9 +48,13 @@ export class PlayerManager {
   }
 
   removePlayerFromUI(playerId: string) {
+    console.log('Attempting to remove player with ID:', playerId);
     const sprite = this.players.get(playerId)?.sprite;
     if (sprite) {
+      console.log('Sprite found. Destroying sprite.');
       sprite.destroy();
+    } else {
+      console.log('No sprite found for this player.');
     }
     this.players.delete(playerId);
 

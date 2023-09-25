@@ -98,9 +98,15 @@ export default class Main extends Phaser.Scene {
     const currentPlayer = state.players.get(currentPlayerId)!;
     console.log('Current Player in updateUI:', currentPlayer);
 
+    if (!currentPlayerId) {
+      console.error('Current player ID is null');
+      return;
+    }
+
     // Remove players who left
     this.playerManager.players.forEach((playerObj, id) => {
       if (!currentPlayerIds.includes(id)) {
+        console.log('Removing player with ID:', id);
         this.playerManager.removePlayerFromUI(id);
         this.clearPlayerCards(id); // Assuming you have a method to clear player cards from the UI
       }
