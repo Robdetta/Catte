@@ -76,24 +76,15 @@ export default class Main extends Phaser.Scene {
     this.scale.on('resize', this.handleResize, this);
   }
 
-  private displayPlayers(totalPlayers: number) {
-    const playersMap = this.playerManager.players;
-    let index = 0;
-    playersMap.forEach(({ player }, playerId) => {
-      const { x, y } = this.playerManager.calculatePlayerPosition(
-        index,
-        totalPlayers,
-        this.cameras.main,
-        this.getCurrentPlayerId.bind(this),
-      );
-      this.playerManager.addPlayerToUI(player, x, y);
-      index++;
-    });
+  private displayPlayers() {
+    const room = getRoom(); // Get the current room state
+    if (room && room.state.players) {
+      this.playerManager.updateUI(room.state);
+    }
   }
 
   private updateUI(state: State) {
     const currentPlayerIds = [...state.players.keys()];
-    const currentPlayerId = this.getCurrentPlayerId();
 
     const currentPlayer = state.players.get(currentPlayerId)!;
     console.log('Current Player in updateUI:', currentPlayer);
