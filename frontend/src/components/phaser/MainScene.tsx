@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Player } from '../../models/Player';
 import { PlayerManager } from './helpers/PlayerManager';
+import { initializeRoomEvents } from '../../services/roomService';
 import { getRoom, getCurrentPlayerSessionId } from '../../stores/roomStore';
 import CardUtils from '../../utils/CardUtils';
 
@@ -9,11 +10,18 @@ interface MainConfig {
   numBots: number;
 }
 
+interface State {
+  // Define properties of the room state here
+  numPlayers: number;
+  numBots: number;
+  players: Map<string, Player>;
+}
+
 export default class Main extends Phaser.Scene {
   private playerManager: PlayerManager;
+  private cardUtils: CardUtils;
   private welcomeText: Phaser.GameObjects.Text | null = null;
   private playerSprites: { [key: string]: Phaser.GameObjects.Sprite } = {};
-  private cardUtils: CardUtils;
   private playerCardImages: { [playerId: string]: Phaser.GameObjects.Image[] } =
     {};
 
@@ -23,9 +31,8 @@ export default class Main extends Phaser.Scene {
     this.cardUtils = new CardUtils();
   }
 
-  init(data: { numPlayers: number; numBots: number }) {
-    this.data.set('numPlayers', data.numPlayers);
-    this.data.set('numBots', data.numBots);
+  init(data: MainConfig) {
+    // Initialization logic
   }
 
   preload() {
@@ -36,126 +43,117 @@ export default class Main extends Phaser.Scene {
   private getCurrentPlayerId(): string | null {
     return getCurrentPlayerSessionId();
   }
-
   create() {
+    initializeRoomEvents(getRoom());
+
+    this.validateAndInitializeRoom();
+    this.setupEventListeners();
+    this.initUIComponents();
+    this.displayPlayers();
+  }
+
+  private validateAndInitializeRoom() {
     const room = getRoom();
-    console.log('Fetched Room:', room);
-    if (!room) {
-      console.error('No room data available');
+    if (!room || !this.validateRoomState(room.state)) {
       return;
     }
+    // Initialization logic based on room state can go here
+  }
 
-    if (
-      !room.state ||
-      room.state.numPlayers === undefined ||
-      room.state.numBots === undefined
-    ) {
-      console.error('State properties missing.');
-      return;
-    }
-
-    const playersArray = Array.from(room.state.players.values()) as Player[];
-    //this.playerManager.addPlayers(playersArray);
-
-    const { numPlayers, numBots } = room.state;
-    const totalPlayers = numPlayers + numBots;
-    console.log(room.state);
-
-    console.log('Room State:', room.state);
-    console.log('Number of Players:', room.state.numPlayers);
-    console.log('Number of Bots:', room.state.numBots);
-    console.log('Players:', room.state.players);
-
-    //this.displayDeck();
-    room.onStateChange(this.updateUI.bind(this));
-
-    this.displayPlayers(totalPlayers);
-
-    this.initWelcomeText();
-    this.updateLayout();
+  private setupEventListeners() {
+    const room = getRoom();
     this.scale.on('resize', this.handleResize, this);
   }
 
-  private displayPlayers() {
-    const room = getRoom(); // Get the current room state
-    if (room && room.state.players) {
-      this.playerManager.updateUI(room.state);
+  private validateRoomState(state: any): state is State {
+    if (
+      !state ||
+      state.numPlayers === undefined ||
+      state.numBots === undefined ||
+      !state.players
+    ) {
+      console.error('State properties missing.');
+      return false;
     }
+    return true;
+  }
+
+  private initUIComponents() {
+    // UI component initialization logic
+  }
+
+  private displayPlayers() {
+    const room = getRoom();
+    if (!this.validateRoomState(room?.state)) {
+      return;
+    }
+    const players = Array.from(room.state.players.values());
+    const currentPlayerId = this.getCurrentPlayerId();
+
+    // Clear any previous player sprites or images
+    Object.values(this.playerSprites).forEach((sprite) => sprite.destroy());
+    this.playerSprites = {};
+
+    // Position the current player session at the bottom
+    if (currentPlayerId) {
+      this.playerSprites[currentPlayerId] = this.add
+        .sprite(
+          this.cameras.main.centerX,
+          this.cameras.main.height - 50,
+          'playerAvatar',
+        )
+        .setOrigin(0.5);
+    }
+
+    // Position all other players evenly in a circle
+    const otherPlayers = players.filter(
+      (player) => player.sessionId !== currentPlayerId,
+    );
+    const numOtherPlayers = otherPlayers.length;
+
+    otherPlayers.forEach((player, index) => {
+      const angle = (2 * Math.PI * index) / numOtherPlayers;
+      const x = this.cameras.main.centerX + 200 * Math.cos(angle);
+      const y = this.cameras.main.centerY + 200 * Math.sin(angle);
+
+      this.playerSprites[player.sessionId] = this.add
+        .sprite(x, y, 'playerAvatar')
+        .setOrigin(0.5);
+    });
   }
 
   private updateUI(state: State) {
-    const currentPlayerIds = [...state.players.keys()];
+    if (!this.validateRoomState(state)) {
+      return;
+    }
 
-    const currentPlayer = state.players.get(currentPlayerId)!;
-    console.log('Current Player in updateUI:', currentPlayer);
+    this.handlePlayerUpdates(state);
+  }
 
+  // Call this method when the player array state changes
+  updatePlayersToUI() {
+    this.playerManager.updatePlayersToUI();
+    this.displayPlayers();
+  }
+
+  private handlePlayerUpdates(state: State) {
+    const currentPlayerId = this.getCurrentPlayerId();
     if (!currentPlayerId) {
       console.error('Current player ID is null');
       return;
     }
 
-    console.log('Pre-remove player state:', [
-      ...this.playerManager.players.keys(),
-    ]);
-    // Remove players who left
-    this.playerManager.players.forEach((playerObj, id) => {
-      if (!currentPlayerIds.includes(id)) {
-        console.log('Removing player with ID:', id);
-        this.playerManager.removePlayerFromUI(id);
-        this.clearPlayerCards(id); // Assuming you have a method to clear player cards from the UI
-      }
-    });
+    this.removeDisconnectedPlayers(state, currentPlayerId);
+    this.updateOrAddPlayers(state, currentPlayerId);
+    this.displayPlayers(); // Update player positions when state changes
+  }
 
-    console.log('Post-remove player state:', [
-      ...this.playerManager.players.keys(),
-    ]);
+  private removeDisconnectedPlayers(state: State, currentPlayerId: string) {
+    // Remove players who left (logic can go here)
+  }
 
-    currentPlayerIds.forEach((id, index) => {
-      const playerData = state.players.get(id);
-      if (!playerData) {
-        console.error('Player data not found for ID:', id);
-        return;
-      }
-
-      const { x, y } = this.playerManager.calculatePlayerPosition(
-        index,
-        state.players.size,
-        this.cameras.main,
-        this.getCurrentPlayerId.bind(this),
-      );
-
-      let playerInstance = this.playerManager.getPlayerWithSprite(id)?.player;
-
-      if (!playerInstance) {
-        playerInstance = this.playerManager.createPlayer(playerData);
-        // Assuming you'll add a sprite later
-        this.playerManager.addPlayerWithSprite(playerInstance, null);
-      }
-
-      // Update UI
-      this.playerManager.updatePlayerPositions(
-        state,
-        this.getCurrentPlayerId.bind(this),
-      );
-      // Moved this inside the forEach loop
-      if (id === currentPlayerId && currentPlayer && currentPlayer.hand) {
-        this.cardUtils.displayCards(
-          currentPlayer.hand,
-          currentPlayerId,
-          this.addImageToScene.bind(this),
-          currentPlayer,
-        );
-      } else {
-        // Otherwise, display card backs for this player
-        this.cardUtils.displayCardBacksForPlayer(
-          id,
-          playerData,
-          x, // these are the actual x and y coordinates where you want to display
-          y, // the card backs for this player.
-          this.addImageToScene.bind(this),
-        );
-      }
-    });
+  private updateOrAddPlayers(state: State, currentPlayerId: string) {
+    // Loop to update or add players (logic can go here)
   }
 
   private addImageToScene(
@@ -164,7 +162,6 @@ export default class Main extends Phaser.Scene {
     key: string,
     frame: string | number,
   ) {
-    // this.add.image is Phaser's method to add an image to the scene.
     this.add.image(x, y, key, frame);
   }
 
@@ -192,14 +189,12 @@ export default class Main extends Phaser.Scene {
   }
 
   clearPreviousHands() {
-    // Loop through all player hands and destroy any existing card images
     Object.values(this.playerCardImages).forEach((cardImages) => {
       cardImages.forEach((cardImage) => cardImage.destroy());
     });
-
-    // Reset the playerCardImages object
     this.playerCardImages = {};
   }
+
   private updateLayout() {
     const { width, height } = this.cameras.main;
     if (height > width) this.setupPortraitLayout();
@@ -222,6 +217,5 @@ export default class Main extends Phaser.Scene {
 
   update() {
     // Game loop logic here
-    // Debugging: List all objects in the scene
   }
 }
