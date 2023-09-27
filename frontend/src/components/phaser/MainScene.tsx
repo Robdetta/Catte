@@ -4,9 +4,9 @@ import { PlayerManager } from './helpers/PlayerManager';
 import { getRoom, getCurrentPlayerSessionId } from '../../stores/roomStore';
 import CardUtils from '../../utils/CardUtils';
 
-interface State {
-  players: Map<string, Player>;
-  // ... other properties
+interface MainConfig {
+  numPlayers: number;
+  numBots: number;
 }
 
 export default class Main extends Phaser.Scene {
@@ -55,7 +55,7 @@ export default class Main extends Phaser.Scene {
     }
 
     const playersArray = Array.from(room.state.players.values()) as Player[];
-    this.playerManager.addPlayers(playersArray);
+    //this.playerManager.addPlayers(playersArray);
 
     const { numPlayers, numBots } = room.state;
     const totalPlayers = numPlayers + numBots;

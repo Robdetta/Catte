@@ -1,7 +1,19 @@
 import { Client, Room } from 'colyseus.js';
-import { setRoom } from '../stores/roomStore';
+import { setRoom, getRoom } from '../stores/roomStore';
+import { Player } from '../models/Player';
+import { setPlayerArray } from '../stores/roomStore';
 
 const client = new Client('ws://localhost:2567');
+
+// Store player array state
+
+export const getPlayerArray = () => {
+  const room = getRoom();
+  if (room && room.state.players) {
+    return Object.values(room.state.players); // Assuming players are stored in the room's state
+  }
+  return [];
+};
 
 export interface RoomCreationResult {
   gameKey: string;
@@ -75,11 +87,9 @@ export const initializeRoomEvents = (room: Room) => {
     // Here, newState will have all the information about the room's state.
     // You can now update your frontend UI based on the new state.
 
-    // For example, if your state has a 'players' map:
-    newState.players.forEach((player: { hand: any }, playerId: any) => {
-      const hand = player.hand;
-      // Call your method to display cards here.
-      // this.displayCards(hand, playerId);
-    });
+    const newPlayerArray = Array.from(newState.players.values()) as Player[];
+    setPlayerArray(newPlayerArray);
+    // Call your method to display cards here.
+    // this.displayCards(hand, playerId);
   });
 };
