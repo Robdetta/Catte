@@ -49,6 +49,7 @@ export default class Main extends Phaser.Scene {
     this.validateAndInitializeRoom();
     this.setupEventListeners();
     this.initUIComponents();
+    this.playerManager.updatePlayersToUI(); // Update this line
   }
 
   private validateAndInitializeRoom() {

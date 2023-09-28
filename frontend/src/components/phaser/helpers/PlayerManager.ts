@@ -14,7 +14,15 @@ export class PlayerManager {
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
+
+  clearAllPlayerSprites() {
+    this.players.forEach(({ sprite }) => sprite.destroy());
+    this.players.clear();
+  }
+
   updatePlayersToUI() {
+    this.clearAllPlayerSprites(); // Clear all existing sprites
+
     const playerArray = getPlayerArray(); // Get the players from the RoomService
     this.playerSessionIds = playerArray.map((player) => player.id); // Update session IDs
 
