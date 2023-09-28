@@ -49,7 +49,6 @@ export default class Main extends Phaser.Scene {
     this.validateAndInitializeRoom();
     this.setupEventListeners();
     this.initUIComponents();
-    this.displayPlayers();
   }
 
   private validateAndInitializeRoom() {
@@ -62,7 +61,11 @@ export default class Main extends Phaser.Scene {
 
   private setupEventListeners() {
     const room = getRoom();
-    this.scale.on('resize', this.handleResize, this);
+    if (room) {
+      room.onStateChange((newState) => {
+        this.handlePlayerUpdates(newState);
+      });
+    }
   }
 
   private validateRoomState(state: any): state is State {
@@ -80,33 +83,40 @@ export default class Main extends Phaser.Scene {
 
   private initUIComponents() {
     // UI component initialization logic
+    const room = getRoom();
+    if (room && this.validateRoomState(room.state)) {
+      this.handlePlayerUpdates(room.state);
+    }
   }
 
-  private displayPlayers() {
-    const room = getRoom();
-    if (!this.validateRoomState(room?.state)) {
+  private handlePlayerUpdates(state: State) {
+    // Validate the state; you already have a method for this
+    if (!this.validateRoomState(state)) {
       return;
     }
-    const players = Array.from(room.state.players.values());
-    const currentPlayerId = this.getCurrentPlayerId();
 
-    // Clear any previous player sprites or images
+    // Clear previous UI elements
     Object.values(this.playerSprites).forEach((sprite) => sprite.destroy());
     this.playerSprites = {};
 
-    // Position the current player session at the bottom
-    if (currentPlayerId) {
-      this.playerSprites[currentPlayerId] = this.add
-        .sprite(
-          this.cameras.main.centerX,
-          this.cameras.main.height - 50,
-          'playerAvatar',
-        )
-        .setOrigin(0.5);
+    // Rebuild the UI based on the updated state
+    const currentPlayerId = this.getCurrentPlayerId();
+    if (!currentPlayerId) {
+      console.error('Current player ID is null');
+      return;
     }
 
-    // Position all other players evenly in a circle
-    const otherPlayers = players.filter(
+    // Position and render the current player session at the bottom
+    this.playerSprites[currentPlayerId] = this.add
+      .sprite(
+        this.cameras.main.centerX,
+        this.cameras.main.height - 50,
+        'playerAvatar',
+      )
+      .setOrigin(0.5);
+
+    // Position and render all other players evenly in a circle
+    const otherPlayers = Array.from(state.players.values()).filter(
       (player) => player.sessionId !== currentPlayerId,
     );
     const numOtherPlayers = otherPlayers.length;
@@ -115,45 +125,10 @@ export default class Main extends Phaser.Scene {
       const angle = (2 * Math.PI * index) / numOtherPlayers;
       const x = this.cameras.main.centerX + 200 * Math.cos(angle);
       const y = this.cameras.main.centerY + 200 * Math.sin(angle);
-
       this.playerSprites[player.sessionId] = this.add
         .sprite(x, y, 'playerAvatar')
         .setOrigin(0.5);
     });
-  }
-
-  private updateUI(state: State) {
-    if (!this.validateRoomState(state)) {
-      return;
-    }
-
-    this.handlePlayerUpdates(state);
-  }
-
-  // Call this method when the player array state changes
-  updatePlayersToUI() {
-    this.playerManager.updatePlayersToUI();
-    this.displayPlayers();
-  }
-
-  private handlePlayerUpdates(state: State) {
-    const currentPlayerId = this.getCurrentPlayerId();
-    if (!currentPlayerId) {
-      console.error('Current player ID is null');
-      return;
-    }
-
-    this.removeDisconnectedPlayers(state, currentPlayerId);
-    this.updateOrAddPlayers(state, currentPlayerId);
-    this.displayPlayers(); // Update player positions when state changes
-  }
-
-  private removeDisconnectedPlayers(state: State, currentPlayerId: string) {
-    // Remove players who left (logic can go here)
-  }
-
-  private updateOrAddPlayers(state: State, currentPlayerId: string) {
-    // Loop to update or add players (logic can go here)
   }
 
   private addImageToScene(
