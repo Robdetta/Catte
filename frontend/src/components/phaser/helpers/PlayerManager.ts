@@ -24,6 +24,7 @@ export class PlayerManager {
     this.clearAllPlayerSprites(); // Clear all existing sprites
 
     const playerArray = getPlayerArray(); // Get the players from the RoomService
+    console.log('Updating Players:', playerArray); // Debug log
     this.playerSessionIds = playerArray.map((player) => player.id); // Update session IDs
 
     playerArray.forEach((player, index) => {
